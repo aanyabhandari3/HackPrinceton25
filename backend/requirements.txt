@@ -4,4 +4,5 @@ anthropic==0.34.2
 python-dotenv==1.0.0
 requests==2.31.0
 gunicorn==21.2.0
-
+numpy>=2.0.0
+scipy>=1.10.0
