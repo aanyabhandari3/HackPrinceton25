@@ -165,10 +165,10 @@ const ChatPage = () => {
     return <MessageSquare className="w-5 h-5" />
   }
 
-  const getThreadColor = (type) => {
-    if (type === 'agent') return 'from-blue-500 to-purple-600'
-    if (type === 'team') return 'from-green-500 to-teal-600'
-    return 'from-gray-500 to-gray-600'
+  const getThreadAccentClass = (type) => {
+    if (type === 'agent') return 'text-blue-600'
+    if (type === 'team') return 'text-green-600'
+    return 'text-gray-600'
   }
 
   const currentThread = threads.find(t => t.id === selectedThread)
@@ -373,7 +373,7 @@ const ChatPage = () => {
                     className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                   />
                 ) : (
-                  <div className={`w-10 h-10 bg-gradient-to-br ${getThreadColor(thread.type)} rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0`}>
+                  <div className={`w-10 h-10 rounded-full border border-gray-300 bg-gray-100 flex items-center justify-center font-semibold text-sm flex-shrink-0 ${getThreadAccentClass(thread.type)}`}>
                     {thread.type === 'agent' || thread.type === 'team' ? (
                       getThreadIcon(thread.type)
                     ) : (
@@ -407,7 +407,7 @@ const ChatPage = () => {
         {/* Chat Header */}
         <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
           <div className="flex items-center space-x-3">
-            <div className={`w-10 h-10 bg-gradient-to-br ${getThreadColor(currentThread?.type)} rounded-full flex items-center justify-center text-white font-semibold`}>
+            <div className={`w-10 h-10 rounded-full border border-gray-300 bg-gray-100 flex items-center justify-center font-semibold ${getThreadAccentClass(currentThread?.type)}`}>
               {currentThread?.type === 'agent' || currentThread?.type === 'team' ? (
                 getThreadIcon(currentThread?.type)
               ) : (
@@ -460,9 +460,9 @@ const ChatPage = () => {
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {filteredMessages.map((message) => (
             <div key={message.id} className="flex items-start space-x-3">
-              <div className={`w-8 h-8 bg-gradient-to-br ${
-                message.type === 'agent' ? 'from-blue-500 to-purple-600' : 'from-gray-500 to-gray-600'
-              } rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0`}>
+              <div className={`w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center font-semibold text-sm flex-shrink-0 ${
+                message.type === 'agent' ? 'bg-gray-100 text-blue-600' : 'bg-white text-gray-700'
+              }`}>
                 {message.type === 'agent' ? <Bot className="w-4 h-4" /> : message.avatar}
               </div>
               <div className="flex-1">

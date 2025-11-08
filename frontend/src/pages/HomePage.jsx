@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { 
-  ArrowUp, WarningAlt, CheckmarkFilled, Activity, Calendar, Filter, Download, Renew, Close 
+  ArrowUp, WarningAlt, CheckmarkFilled, Activity, Calendar, Filter, Download, Renew, Close, Misuse 
 } from '@carbon/icons-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Button, Card, StatCard, Select } from '../components/ui/index.js'
@@ -21,7 +21,22 @@ const HomePage = () => {
       value: '87%',
       status: 'good',
       icon: CheckmarkFilled,
-      detail: '12 ✅ 3 🟡 1 🔴'
+      detail: (
+        <div className="flex items-center space-x-3 text-sm text-gray-600">
+          <span className="inline-flex items-center space-x-1">
+            <CheckmarkFilled className="w-4 h-4 text-green-600" />
+            <span>12</span>
+          </span>
+          <span className="inline-flex items-center space-x-1">
+            <WarningAlt className="w-4 h-4 text-yellow-600" />
+            <span>3</span>
+          </span>
+          <span className="inline-flex items-center space-x-1">
+            <Misuse className="w-4 h-4 text-red-600" />
+            <span>1</span>
+          </span>
+        </div>
+      )
     },
     {
       title: 'Active Projects',

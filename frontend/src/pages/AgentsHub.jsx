@@ -198,8 +198,8 @@ const AgentsHub = () => {
               {/* Agent Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start space-x-3">
-                  <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-                    <Bot className="w-6 h-6 text-white" />
+                  <div className="p-3 rounded-lg border border-gray-300 bg-gray-100 text-gray-700">
+                    <Bot className="w-6 h-6" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg text-gray-900">{agent.name}</h3>
@@ -393,8 +393,8 @@ const AgentsHub = () => {
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-                  <Bot className="w-6 h-6 text-white" />
+                <div className="p-2 rounded-lg border border-gray-300 bg-gray-100 text-gray-700">
+                  <Bot className="w-6 h-6" />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">{selectedAgent.name}</h2>
@@ -412,10 +412,8 @@ const AgentsHub = () => {
             {/* Chat Area */}
             <div className="flex-1 p-6 overflow-y-auto">
               <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                    AI
-                  </div>
+                <div className="flex space-x-3">
+                  <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-100 flex items-center justify-center text-gray-700 text-sm font-semibold">AI</div>
                   <div className="flex-1 bg-gray-50 rounded-lg p-4">
                     <p className="text-sm text-gray-900">
                       Hello! I'm the {selectedAgent.name}. How can I help you today?

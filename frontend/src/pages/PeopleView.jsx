@@ -251,7 +251,7 @@ const PeopleView = () => {
                     className="w-14 h-14 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                  <div className="w-14 h-14 rounded-full border border-gray-300 bg-gray-100 flex items-center justify-center text-gray-700 font-semibold text-lg">
                     {person.avatar}
                   </div>
                 )}
@@ -327,7 +327,7 @@ const PeopleView = () => {
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xl">
+                <div className="w-16 h-16 rounded-full border border-gray-300 bg-gray-100 flex items-center justify-center text-gray-700 font-semibold text-xl">
                   {selectedPerson.avatar}
                 </div>
                 <div>

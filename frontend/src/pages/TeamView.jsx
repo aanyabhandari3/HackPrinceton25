@@ -366,7 +366,7 @@ const TeamView = () => {
                       className="w-12 h-12 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                    <div className="w-12 h-12 rounded-full border border-gray-300 bg-gray-100 flex items-center justify-center text-gray-700 font-semibold">
                       {member.avatar}
                     </div>
                   )}
@@ -413,8 +413,8 @@ const TeamView = () => {
       {activeTab === 'ai-chat' && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 min-h-[500px] flex flex-col">
           <div className="flex items-center space-x-3 mb-6 pb-4 border-b border-gray-200">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-              <ChatIcon className="w-6 h-6 text-white" />
+            <div className="p-3 rounded-lg border border-gray-300 bg-gray-100 text-gray-700">
+              <ChatIcon className="w-6 h-6" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Team AI Agent</h2>
@@ -427,7 +427,7 @@ const TeamView = () => {
             {messages.map((message) => (
               <div key={message.id} className="flex items-start space-x-3">
                 {message.role === 'assistant' && (
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-100 flex items-center justify-center text-gray-700 text-sm font-semibold flex-shrink-0">
                     AI
                   </div>
                 )}
@@ -452,7 +452,7 @@ const TeamView = () => {
             ))}
             {aiLoading && (
               <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-100 flex items-center justify-center text-gray-700 text-sm font-semibold">
                   AI
                 </div>
                 <div className="flex-1 bg-gray-50 rounded-lg p-4">

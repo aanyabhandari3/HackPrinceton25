@@ -1,5 +1,4 @@
 import React from 'react'
-import { COLORS } from '../../constants/theme.js'
 
 const Button = ({ 
   children, 
@@ -12,84 +11,34 @@ const Button = ({
   className = '',
   ...props 
 }) => {
-  const baseStyles = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.5rem',
-    fontWeight: '500',
-    transition: 'all 0.2s',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    opacity: disabled ? 0.5 : 1,
-    border: 'none',
-    outline: 'none',
+  const variantClasses = {
+    primary: 'bg-blue-600 text-white border border-transparent hover:bg-blue-700',
+    secondary: 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-50',
+    ghost: 'bg-transparent text-gray-800 border border-transparent hover:bg-gray-100',
+    danger: 'bg-red-600 text-white border border-transparent hover:bg-red-700',
   }
 
-  const variants = {
-    primary: {
-      backgroundColor: COLORS.blue60,
-      color: COLORS.white,
-      ':hover': { backgroundColor: COLORS.blue70 },
-    },
-    secondary: {
-      backgroundColor: COLORS.white,
-      color: COLORS.gray100,
-      border: `1px solid ${COLORS.gray50}`,
-      ':hover': { backgroundColor: COLORS.gray10 },
-    },
-    ghost: {
-      backgroundColor: 'transparent',
-      color: COLORS.gray100,
-      ':hover': { backgroundColor: COLORS.gray10 },
-    },
-    danger: {
-      backgroundColor: COLORS.red60,
-      color: COLORS.white,
-      ':hover': { backgroundColor: COLORS.red50 },
-    },
+  const sizeClasses = {
+    sm: 'px-3 py-1.5 text-sm',
+    md: 'px-4 py-2 text-sm',
+    lg: 'px-5 py-3 text-base',
   }
 
-  const sizes = {
-    sm: {
-      padding: '0.375rem 0.75rem',
-      fontSize: '0.875rem',
-    },
-    md: {
-      padding: '0.5rem 1rem',
-      fontSize: '0.875rem',
-    },
-    lg: {
-      padding: '0.75rem 1.5rem',
-      fontSize: '1rem',
-    },
-  }
+  const baseClasses = 'inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
 
-  const variantStyle = variants[variant] || variants.primary
-  const sizeStyle = sizes[size] || sizes.md
-
-  const handleMouseEnter = (e) => {
-    if (!disabled && variantStyle[':hover']) {
-      Object.assign(e.currentTarget.style, variantStyle[':hover'])
-    }
-  }
-
-  const handleMouseLeave = (e) => {
-    if (!disabled) {
-      e.currentTarget.style.backgroundColor = variantStyle.backgroundColor
-    }
-  }
+  const classes = [
+    baseClasses,
+    variantClasses[variant] || variantClasses.primary,
+    sizeClasses[size] || sizeClasses.md,
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <button
       onClick={disabled ? undefined : onClick}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className={className}
-      style={{
-        ...baseStyles,
-        ...variantStyle,
-        ...sizeStyle,
-      }}
+      className={classes}
       disabled={disabled}
       {...props}
     >
