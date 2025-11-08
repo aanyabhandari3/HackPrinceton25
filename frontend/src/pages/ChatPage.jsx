@@ -137,15 +137,15 @@ const ChatPage = () => {
     }
   ])
 
-  const pinnedItems = [
-    { type: 'decision', content: 'API v3 launch date: January 25, 2024', time: 'Yesterday' },
-    { type: 'action', content: 'All teams: Update dependencies by Friday', time: '2 days ago' }
-  ]
+  const [pinnedMessages, setPinnedMessages] = useState([])
 
   const mentions = [
     { thread: 'Frontend Team Discussion', message: 'Can you review the dashboard PR?', time: '1 hour ago' },
     { thread: 'Organization Agent', message: 'Your approval needed for Q4 report', time: '3 hours ago' }
   ]
+
+  // Get pinned threads for sidebar
+  const pinnedThreads = threads.filter(t => t.pinned)
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -203,6 +203,26 @@ const ChatPage = () => {
     setThreads(prev => prev.map(t => 
       t.id === selectedThread ? { ...t, pinned: !t.pinned } : t
     ))
+  }
+
+  // Toggle pin message
+  const handleTogglePinMessage = (messageId) => {
+    const message = messages.find(m => m.id === messageId)
+    if (!message) return
+
+    const isAlreadyPinned = pinnedMessages.some(pm => pm.messageId === messageId)
+    
+    if (isAlreadyPinned) {
+      setPinnedMessages(prev => prev.filter(pm => pm.messageId !== messageId))
+    } else {
+      setPinnedMessages(prev => [...prev, {
+        messageId,
+        content: message.content.substring(0, 100) + (message.content.length > 100 ? '...' : ''),
+        sender: message.sender,
+        time: message.time,
+        threadId: selectedThread
+      }])
+    }
   }
 
   // Add reaction to message
@@ -280,17 +300,36 @@ const ChatPage = () => {
         </div>
 
         {/* Pinned Items */}
-        {pinnedItems.length > 0 && (
+        {(pinnedThreads.length > 0 || pinnedMessages.length > 0) && (
           <div className="p-4 border-b border-gray-200 bg-yellow-50">
             <div className="flex items-center space-x-2 mb-2">
               <Pin className="w-4 h-4 text-yellow-600" />
               <h3 className="text-xs font-semibold text-gray-700 uppercase">Pinned</h3>
             </div>
             <div className="space-y-2">
-              {pinnedItems.map((item, idx) => (
-                <div key={idx} className="text-xs">
-                  <p className="text-gray-900 font-medium">{item.content}</p>
-                  <p className="text-gray-500">{item.time}</p>
+              {/* Pinned Threads */}
+              {pinnedThreads.map((thread) => (
+                <div 
+                  key={`thread-${thread.id}`} 
+                  onClick={() => setSelectedThread(thread.id)}
+                  className="text-xs cursor-pointer hover:bg-yellow-100 p-2 rounded transition-colors"
+                >
+                  <p className="text-gray-900 font-medium flex items-center space-x-1">
+                    <Hash className="w-3 h-3" />
+                    <span>{thread.name}</span>
+                  </p>
+                  <p className="text-gray-600 truncate">{thread.lastMessage}</p>
+                </div>
+              ))}
+              {/* Pinned Messages */}
+              {pinnedMessages.filter(pm => pm.threadId === selectedThread).map((item) => (
+                <div 
+                  key={`msg-${item.messageId}`} 
+                  className="text-xs bg-white p-2 rounded"
+                >
+                  <p className="text-gray-900 font-medium">{item.sender}</p>
+                  <p className="text-gray-600">{item.content}</p>
+                  <p className="text-gray-500 mt-1">{item.time}</p>
                 </div>
               ))}
             </div>
@@ -427,9 +466,22 @@ const ChatPage = () => {
                 {message.type === 'agent' ? <Bot className="w-4 h-4" /> : message.avatar}
               </div>
               <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-1">
-                  <span className="font-semibold text-sm text-gray-900">{message.sender}</span>
-                  <span className="text-xs text-gray-500">{message.time}</span>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-semibold text-sm text-gray-900">{message.sender}</span>
+                    <span className="text-xs text-gray-500">{message.time}</span>
+                  </div>
+                  <button
+                    onClick={() => handleTogglePinMessage(message.id)}
+                    className={`p-1 rounded transition-colors ${
+                      pinnedMessages.some(pm => pm.messageId === message.id)
+                        ? 'text-yellow-600 hover:bg-yellow-100'
+                        : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                    }`}
+                    title={pinnedMessages.some(pm => pm.messageId === message.id) ? 'Unpin message' : 'Pin message'}
+                  >
+                    <Pin className="w-4 h-4" />
+                  </button>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm">
                   <p className="text-sm text-gray-900 whitespace-pre-line">{message.content}</p>
