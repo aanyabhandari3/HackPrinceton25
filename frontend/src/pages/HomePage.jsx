@@ -1,22 +1,14 @@
 import React, { useState } from 'react'
 import { 
-  ArrowUp, WarningAlt, CheckmarkFilled, Time, UserMultiple, 
-  Activity, Calendar, Filter, Download, Renew 
+  ArrowUp, WarningAlt, CheckmarkFilled, Activity, Calendar, Filter, Download, Renew 
 } from '@carbon/icons-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { Button, Card, StatCard, Select } from '../components/ui'
+import { activityData, teamActivity, recentHighlights, upcomingDeadlines } from '../data/mockData'
+import { COLORS } from '../constants/theme'
 
 const HomePage = () => {
   const [dateRange, setDateRange] = useState('7d')
-
-  const activityData = [
-    { date: 'Mon', value: 45 },
-    { date: 'Tue', value: 52 },
-    { date: 'Wed', value: 38 },
-    { date: 'Thu', value: 65 },
-    { date: 'Fri', value: 58 },
-    { date: 'Sat', value: 20 },
-    { date: 'Sun', value: 15 },
-  ]
 
   const summaryCards = [
     {
@@ -24,7 +16,6 @@ const HomePage = () => {
       value: '87%',
       status: 'good',
       icon: CheckmarkFilled,
-      color: 'green',
       detail: '12 ✅ 3 🟡 1 🔴'
     },
     {
@@ -32,7 +23,6 @@ const HomePage = () => {
       value: '16',
       status: 'neutral',
       icon: Activity,
-      color: 'blue',
       detail: 'Across 5 teams'
     },
     {
@@ -40,7 +30,6 @@ const HomePage = () => {
       value: '142',
       status: 'good',
       icon: ArrowUp,
-      color: 'purple',
       detail: 'Last 7 days (+12%)'
     },
     {
@@ -48,56 +37,15 @@ const HomePage = () => {
       value: '3',
       status: 'warning',
       icon: WarningAlt,
-      color: 'orange',
       detail: '2 critical, 1 medium'
     }
   ]
 
-  const recentHighlights = [
-    {
-      type: 'success',
-      team: 'Backend Team',
-      message: 'Successfully deployed v2.3.0 to production',
-      time: '2 hours ago',
-      icon: CheckmarkFilled
-    },
-    {
-      type: 'warning',
-      team: 'Frontend Team',
-      message: 'Performance regression detected in dashboard loading',
-      time: '4 hours ago',
-      icon: WarningAlt
-    },
-    {
-      type: 'info',
-      team: 'Mobile Team',
-      message: 'Sprint planning completed - 23 stories committed',
-      time: '5 hours ago',
-      icon: Calendar
-    },
-    {
-      type: 'success',
-      team: 'DevOps Team',
-      message: 'CI/CD pipeline optimization reduced build time by 40%',
-      time: '1 day ago',
-      icon: ArrowUp
-    }
-  ]
-
-  const upcomingDeadlines = [
-    { project: 'Q4 Platform Upgrade', team: 'Backend', date: '2024-01-15', daysLeft: 3, priority: 'high' },
-    { project: 'Mobile App Redesign', team: 'Mobile', date: '2024-01-20', daysLeft: 8, priority: 'medium' },
-    { project: 'API Documentation', team: 'Backend', date: '2024-01-25', daysLeft: 13, priority: 'low' },
-    { project: 'Security Audit', team: 'DevOps', date: '2024-01-18', daysLeft: 6, priority: 'high' }
-  ]
-
-  const teamActivity = [
-    { name: 'Backend Team', lead: 'Sarah Chen', active: 8, total: 10, activity: 92 },
-    { name: 'Frontend Team', lead: 'Mike Johnson', active: 6, total: 8, activity: 75 },
-    { name: 'Mobile Team', lead: 'Lisa Wang', active: 5, total: 6, activity: 83 },
-    { name: 'DevOps Team', lead: 'Tom Brown', active: 4, total: 5, activity: 80 },
-    { name: 'QA Team', lead: 'Emma Davis', active: 5, total: 7, activity: 71 }
-  ]
+  const highlightIcons = {
+    success: CheckmarkFilled,
+    warning: WarningAlt,
+    info: Calendar,
+  }
 
   const getStatusColor = (status) => {
     const colors = {
@@ -154,21 +102,16 @@ const HomePage = () => {
 
       {/* Summary Cards - Carbon Tiles */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {summaryCards.map((card, index) => {
-          const Icon = card.icon
-          const isGood = card.status === 'good'
-          const isWarning = card.status === 'warning'
-          return (
-            <div key={index} className="p-4 transition-all hover:shadow-md" style={{ backgroundColor: '#ffffff', border: '1px solid #e0e0e0' }}>
-              <div className="flex items-start justify-between mb-3">
-                <p className="text-xs font-medium uppercase tracking-wider" style={{ color: '#525252' }}>{card.title}</p>
-                <Icon size={20} style={{ color: isWarning ? '#da1e28' : isGood ? '#24a148' : '#0f62fe' }} />
-              </div>
-              <p className="text-3xl font-semibold mb-2" style={{ color: '#161616' }}>{card.value}</p>
-              <p className="text-xs" style={{ color: '#525252' }}>{card.detail}</p>
-            </div>
-          )
-        })}
+        {summaryCards.map((card, index) => (
+          <StatCard
+            key={index}
+            title={card.title}
+            value={card.value}
+            detail={card.detail}
+            icon={card.icon}
+            status={card.status}
+          />
+        ))}
       </div>
 
       {/* Activity Chart & Team Activity */}
