@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import anthropic
 import requests
 from datetime import datetime
+import googlemaps
 
 load_dotenv()
 
@@ -17,6 +18,7 @@ MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN')
 CENSUS_API_KEY = os.getenv('CENSUS_API_KEY')
 EIA_API_KEY = os.getenv('EIA_API_KEY')
 OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
+MAPS_API_KEY = os.getenv('MAPS_API_KEY')
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -249,6 +251,12 @@ def calculate_impact(datacenter_config, location_data, energy_data, climate_data
         }
     }
 
+def get_street_address(lat, lon):
+    """Get street address from lat, lon"""
+    gmaps = googlemaps.Client(key=os.getenv('MAPS_API_KEY'))
+    reverse_geocode_result = gmaps.reverse_geocode((lat, lon))
+    return reverse_geocode_result
+
 def generate_llm_analysis(datacenter_config, location_data, energy_data, climate_data, impact_data, lat, lon):
     """Use Claude to generate comprehensive analysis"""
     
@@ -359,6 +367,9 @@ def analyze_datacenter():
         energy_data = get_energy_data(state_code)
         
         climate_data = get_climate_data(lat, lon)
+        
+        street_address = get_street_address(lat, lon)
+        print(f"Street address: {street_address}")
         
         # Calculate impacts
         impact_data = calculate_impact(datacenter_config, location_data, energy_data, climate_data)
