@@ -1,14 +1,19 @@
 import React, { useState } from 'react'
 import { 
-  ArrowUp, WarningAlt, CheckmarkFilled, Activity, Calendar, Filter, Download, Renew 
+  ArrowUp, WarningAlt, CheckmarkFilled, Activity, Calendar, Filter, Download, Renew, Close 
 } from '@carbon/icons-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Button, Card, StatCard, Select } from '../components/ui/index.js'
 import { activityData, teamActivity, recentHighlights, upcomingDeadlines } from '../data/mockData.js'
 import { COLORS } from '../constants/theme.js'
+import { aiService } from '../services/api.js'
 
 const HomePage = () => {
   const [dateRange, setDateRange] = useState('7d')
+  const [orgQuestion, setOrgQuestion] = useState('')
+  const [isAskingAI, setIsAskingAI] = useState(false)
+  const [aiResponse, setAiResponse] = useState(null)
+  const [showAIModal, setShowAIModal] = useState(false)
 
   const summaryCards = [
     {
@@ -63,6 +68,23 @@ const HomePage = () => {
       low: 'bg-green-100 text-green-700'
     }
     return colors[priority] || colors.medium
+  }
+
+  const handleAskOrgAgent = async () => {
+    if (!orgQuestion.trim() || isAskingAI) return
+
+    setIsAskingAI(true)
+    try {
+      const response = await aiService.askQuestion('organization', orgQuestion)
+      setAiResponse(response.answer)
+      setShowAIModal(true)
+    } catch (error) {
+      console.error('Error asking AI:', error)
+      setAiResponse('Sorry, I encountered an error. Please try again.')
+      setShowAIModal(true)
+    } finally {
+      setIsAskingAI(false)
+    }
   }
 
   return (
@@ -234,8 +256,16 @@ const HomePage = () => {
         <div className="relative">
           <input
             type="text"
+            value={orgQuestion}
+            onChange={(e) => setOrgQuestion(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && !isAskingAI) {
+                handleAskOrgAgent()
+              }
+            }}
             placeholder="e.g., 'What are the top blockers for Backend team?' or 'Show me Sarah's progress this week'"
             className="w-full px-4 py-3 focus:outline-none text-sm"
+            disabled={isAskingAI}
             style={{ 
               backgroundColor: '#ffffff',
               color: '#161616',
@@ -243,11 +273,54 @@ const HomePage = () => {
               borderBottom: '1px solid #8d8d8d'
             }}
           />
-          <button className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 text-sm font-medium transition-colors" style={{ backgroundColor: '#161616', color: '#ffffff' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#393939'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#161616'}>
-            Ask
+          <button 
+            onClick={handleAskOrgAgent}
+            disabled={isAskingAI || !orgQuestion.trim()}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+            style={{ backgroundColor: '#161616', color: '#ffffff' }} 
+            onMouseEnter={(e) => !isAskingAI && (e.currentTarget.style.backgroundColor = '#393939')} 
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#161616'}
+          >
+            {isAskingAI ? 'Asking...' : 'Ask'}
           </button>
         </div>
       </div>
+
+      {/* AI Response Modal */}
+      {showAIModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowAIModal(false)}>
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold" style={{ color: '#161616' }}>AI Response</h3>
+              <button onClick={() => setShowAIModal(false)} className="p-1 hover:bg-gray-100 rounded">
+                <Close size={20} style={{ color: '#161616' }} />
+              </button>
+            </div>
+            <div className="mb-4 p-3 bg-blue-50 rounded" style={{ borderLeft: '3px solid #0f62fe' }}>
+              <p className="text-sm font-medium" style={{ color: '#161616' }}>Your Question:</p>
+              <p className="text-sm mt-1" style={{ color: '#525252' }}>{orgQuestion}</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded">
+              <p className="text-sm whitespace-pre-wrap" style={{ color: '#161616' }}>{aiResponse}</p>
+            </div>
+            <div className="mt-4 flex justify-end space-x-2">
+              <button 
+                onClick={() => {
+                  setShowAIModal(false)
+                  setOrgQuestion('')
+                  setAiResponse(null)
+                }}
+                className="px-4 py-2 text-sm transition-colors"
+                style={{ backgroundColor: '#0f62fe', color: '#ffffff' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0353e9'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0f62fe'}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -5,12 +5,17 @@ import {
   Chat as ChatIcon, Add, Filter, RequestQuote, Code, Debug, Branch 
 } from '@carbon/icons-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import { useAIChat } from '../hooks/useAIChat.js'
 
 const TeamView = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const teamFromUrl = searchParams.get('team') || 'backend'
   const [selectedTeam, setSelectedTeam] = useState(teamFromUrl)
   const [activeTab, setActiveTab] = useState('overview')
+  const [chatInput, setChatInput] = useState('')
+  
+  // AI Chat hook
+  const { messages, isLoading: aiLoading, sendMessage } = useAIChat(selectedTeam)
 
   // Sync selectedTeam with URL parameter
   useEffect(() => {
@@ -358,31 +363,77 @@ const TeamView = () => {
             </div>
           </div>
 
-          <div className="flex-1 space-y-4 mb-4">
-            <div className="flex items-start space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                AI
+          {/* Messages */}
+          <div className="flex-1 space-y-4 mb-4 overflow-y-auto max-h-[400px]">
+            {messages.map((message) => (
+              <div key={message.id} className="flex items-start space-x-3">
+                {message.role === 'assistant' && (
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                    AI
+                  </div>
+                )}
+                {message.role === 'user' && (
+                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-700 text-sm font-semibold flex-shrink-0">
+                    You
+                  </div>
+                )}
+                <div className={`flex-1 rounded-lg p-4 ${
+                  message.role === 'assistant' 
+                    ? message.isError 
+                      ? 'bg-red-50 border border-red-200' 
+                      : 'bg-gray-50'
+                    : 'bg-blue-50'
+                }`}>
+                  <p className="text-sm text-gray-900 whitespace-pre-wrap">{message.content}</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {message.timestamp.toLocaleTimeString()}
+                  </p>
+                </div>
               </div>
-              <div className="flex-1 bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-900">Hello! I'm the Backend Team's AI agent. I can help you with:</p>
-                <ul className="mt-2 space-y-1 text-sm text-gray-700">
-                  <li>• Get project status updates</li>
-                  <li>• Summarize recent discussions</li>
-                  <li>• Create or update tickets</li>
-                  <li>• Analyze team performance</li>
-                </ul>
+            ))}
+            {aiLoading && (
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                  AI
+                </div>
+                <div className="flex-1 bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
+          {/* Input */}
           <div className="relative">
             <input
               type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !aiLoading && chatInput.trim()) {
+                  sendMessage(chatInput);
+                  setChatInput('');
+                }
+              }}
               placeholder="Ask the team agent anything..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-24"
+              disabled={aiLoading}
             />
-            <button className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors">
-              Send
+            <button 
+              onClick={() => {
+                if (chatInput.trim() && !aiLoading) {
+                  sendMessage(chatInput);
+                  setChatInput('');
+                }
+              }}
+              disabled={aiLoading || !chatInput.trim()}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {aiLoading ? 'Sending...' : 'Send'}
             </button>
           </div>
         </div>

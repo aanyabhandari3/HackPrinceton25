@@ -5,6 +5,7 @@ import {
   Settings, Menu, Close, Notification, Search, ChevronDown, Add, Hashtag,
   ChevronRight, OverflowMenuVertical, Star as StarIcon
 } from '@carbon/icons-react'
+import { useNotifications } from '../hooks/useNotifications.js'
 
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -14,48 +15,8 @@ const Layout = ({ children }) => {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const notifications = [
-    {
-      id: 1,
-      type: 'mention',
-      title: 'Sarah Chen mentioned you',
-      message: 'in #backend-team: "Can you review the API changes?"',
-      time: '5 min ago',
-      unread: true
-    },
-    {
-      id: 2,
-      type: 'update',
-      title: 'Sprint Planning Complete',
-      message: 'Backend Team has completed sprint planning for Sprint 24',
-      time: '1 hour ago',
-      unread: true
-    },
-    {
-      id: 3,
-      type: 'alert',
-      title: 'Critical Issue Detected',
-      message: 'Production API response time exceeded threshold',
-      time: '2 hours ago',
-      unread: false
-    },
-    {
-      id: 4,
-      type: 'success',
-      title: 'Deployment Successful',
-      message: 'v2.3.0 deployed to production successfully',
-      time: '3 hours ago',
-      unread: false
-    },
-    {
-      id: 5,
-      type: 'mention',
-      title: 'Alex Kumar assigned you',
-      message: 'to task BACK-235: Optimize database queries',
-      time: '5 hours ago',
-      unread: false
-    }
-  ]
+  // Use notifications hook
+  const { notifications, markAsRead, markAllAsRead } = useNotifications()
 
   const teams = [
     { id: 'backend', name: 'Backend Team', color: 'bg-blue-500', unread: 3 },
@@ -323,8 +284,7 @@ const Layout = ({ children }) => {
                       className="text-xs transition-colors hover:underline"
                       style={{ color: '#0f62fe' }}
                       onClick={() => {
-                        // Mark all as read functionality
-                        setNotificationsOpen(false)
+                        markAllAsRead()
                       }}
                     >
                       Mark all as read
@@ -343,7 +303,12 @@ const Layout = ({ children }) => {
                         }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e0e0e0'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = notification.unread ? '#f4f4f4' : '#ffffff'}
-                        onClick={() => setNotificationsOpen(false)}
+                        onClick={() => {
+                          if (notification.unread) {
+                            markAsRead(notification.id)
+                          }
+                          setNotificationsOpen(false)
+                        }}
                       >
                         <div className="flex items-start space-x-3">
                           <div className="flex-shrink-0 mt-1">

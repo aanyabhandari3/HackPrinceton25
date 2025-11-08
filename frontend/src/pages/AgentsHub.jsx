@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { 
-  Bot, MessageSquare, Settings, Activity, Link as LinkIcon, 
-  CheckCircle, Clock, TrendingUp, Users, GitBranch, Slack, 
-  Github, FileText, Plus, Edit, Trash2, Eye
-} from 'lucide-react'
+  Bot, Chat, Settings, Activity, Link as LinkIcon, 
+  CheckmarkFilled, Time, ChartLine, UserMultiple, Branch, 
+  LogoSlack, LogoGithub, Document, Add, Edit, TrashCan, View, WarningAlt
+} from '@carbon/icons-react'
 
 const AgentsHub = () => {
   const [activeTab, setActiveTab] = useState('my-agents')
@@ -127,18 +127,18 @@ const AgentsHub = () => {
   ]
 
   const connectorIcons = {
-    'GitHub': Github,
-    'Jira': FileText,
-    'Slack': Slack,
-    'Figma': FileText,
-    'App Store Connect': FileText,
-    'AWS': FileText,
-    'DataDog': Activity,
-    'PagerDuty': Activity,
-    'All team sources': GitBranch,
-    'HR System': Users,
-    'Finance': FileText,
-    'TestRail': CheckCircle
+    'GitHub': LogoGithub,
+    'Jira': Document,
+    'Slack': LogoSlack,
+    'Figma': Document,
+    'AWS': Activity,
+    'DataDog': ChartLine,
+    'PagerDuty': WarningAlt,
+    'Linear': Branch,
+    'Notion': Document,
+    'HR System': UserMultiple,
+    'Finance': Document,
+    'TestRail': CheckmarkFilled
   }
 
   const getStatusColor = (status) => {
@@ -146,10 +146,10 @@ const AgentsHub = () => {
   }
 
   const getInteractionIcon = (type) => {
-    if (type === 'query') return <MessageSquare className="w-4 h-4 text-blue-600" />
-    if (type === 'report') return <FileText className="w-4 h-4 text-purple-600" />
+    if (type === 'query') return <Chat className="w-4 h-4 text-blue-600" />
+    if (type === 'report') return <Document className="w-4 h-4 text-purple-600" />
     if (type === 'action') return <Activity className="w-4 h-4 text-green-600" />
-    return <MessageSquare className="w-4 h-4 text-gray-600" />
+    return <Chat className="w-4 h-4 text-gray-600" />
   }
 
   const agents = activeTab === 'my-agents' ? myAgents : allAgents
@@ -163,7 +163,7 @@ const AgentsHub = () => {
           <p className="text-gray-500 mt-1">Manage and monitor your AI agents across the organization</p>
         </div>
         <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all flex items-center space-x-2">
-          <Plus className="w-4 h-4" />
+          <Add className="w-4 h-4" />
           <span>Create New Agent</span>
         </button>
       </div>
@@ -270,11 +270,11 @@ const AgentsHub = () => {
                   onClick={() => setSelectedAgent(agent)}
                   className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
                 >
-                  <MessageSquare className="w-4 h-4" />
+                  <Chat className="w-4 h-4" />
                   <span>Chat</span>
                 </button>
                 <button className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Eye className="w-4 h-4" />
+                  <View className="w-4 h-4" />
                 </button>
                 <button className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <Settings className="w-4 h-4" />
@@ -377,7 +377,7 @@ const AgentsHub = () => {
                       <Icon className="w-5 h-5 text-gray-600" />
                       <span className="text-sm font-medium text-gray-900">{connector}</span>
                     </div>
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <CheckmarkFilled className="w-5 h-5 text-green-600" />
                   </div>
                 )
               })}
