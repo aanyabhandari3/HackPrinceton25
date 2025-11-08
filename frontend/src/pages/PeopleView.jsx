@@ -10,7 +10,7 @@ import AlexKumarImg from '../assets/profiles/AlexKumar.png'
 import LisaWangImg from '../assets/profiles/LisaWang.png'
 import MikeJohnsonImg from '../assets/profiles/MikeJohnson.png'
 import EmilyRodriguezImg from '../assets/profiles/EmilyRodriguez.png'
-
+  
 const PeopleView = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterRole, setFilterRole] = useState('all')

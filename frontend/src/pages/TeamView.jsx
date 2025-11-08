@@ -200,29 +200,23 @@ const TeamView = () => {
           <select 
             value={selectedTeam}
             onChange={(e) => handleTeamChange(e.target.value)}
-            className="px-3 py-2 text-lg font-semibold focus:outline-none"
-            style={{ 
-              backgroundColor: '#f4f4f4',
-              border: '1px solid #8d8d8d',
-              borderBottom: '1px solid #8d8d8d',
-              color: '#161616'
-            }}
+            className="px-3 py-2 text-lg font-semibold bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {teams.map(team => (
               <option key={team.id} value={team.id}>{team.name}</option>
             ))}
           </select>
-          <div className="text-sm" style={{ color: '#525252' }}>
+          <div className="text-sm text-gray-600">
             <p>Lead: {currentTeam?.lead} • {currentTeam?.members} members</p>
-            <p className="text-xs">Current Focus: {currentTeam?.focus}</p>
+            <p className="text-xs text-gray-500">Current Focus: {currentTeam?.focus}</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <button className="px-3 py-2 text-sm transition-colors flex items-center space-x-2" style={{ backgroundColor: '#ffffff', border: '1px solid #8d8d8d', color: '#161616' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e0e0e0'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}>
+          <button className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2">
             <Filter size={16} />
             <span>Filter</span>
           </button>
-          <button className="px-3 py-2 text-white text-sm transition-colors flex items-center space-x-2" style={{ backgroundColor: '#0f62fe' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0353e9'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0f62fe'}>
+          <button className="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
             <ChatIcon size={16} />
             <span>Ping Team Agent</span>
           </button>
@@ -230,17 +224,17 @@ const TeamView = () => {
       </div>
 
       {/* Tabs */}
-      <div style={{ borderBottom: '1px solid #e0e0e0' }}>
+      <div className="border-b border-gray-200">
         <nav className="flex space-x-8">
           {['overview', 'members', 'ai-chat', 'backlog'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors`}
-              style={{
-                borderBottomColor: activeTab === tab ? '#0f62fe' : 'transparent',
-                color: activeTab === tab ? '#0f62fe' : '#525252'
-              }}
+              className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === tab
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
             >
               {tab.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
             </button>
@@ -255,15 +249,15 @@ const TeamView = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {kpis.map((kpi, index) => {
               const Icon = kpi.icon
-              const iconColor = kpi.status === 'warning' ? '#da1e28' : kpi.status === 'good' ? '#24a148' : '#0f62fe'
+              const iconColor = kpi.status === 'warning' ? 'text-red-600' : kpi.status === 'good' ? 'text-green-600' : 'text-blue-600'
               return (
-                <div key={index} className="p-4 transition-all hover:shadow-md" style={{ backgroundColor: '#ffffff', border: '1px solid #e0e0e0' }}>
+                <div key={index} className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-3">
-                    <p className="text-xs font-medium uppercase tracking-wider" style={{ color: '#525252' }}>{kpi.label}</p>
-                    <Icon size={20} style={{ color: iconColor }} />
+                    <p className="text-xs font-medium uppercase tracking-wider text-gray-600">{kpi.label}</p>
+                    <Icon size={20} className={iconColor} />
                   </div>
-                  <p className="text-3xl font-semibold mb-2" style={{ color: '#161616' }}>{kpi.value}</p>
-                  <p className="text-xs" style={{ color: '#525252' }}>{kpi.trend}</p>
+                  <p className="text-3xl font-semibold text-gray-900 mb-2">{kpi.value}</p>
+                  <p className="text-xs text-gray-600">{kpi.trend}</p>
                 </div>
               )
             })}
