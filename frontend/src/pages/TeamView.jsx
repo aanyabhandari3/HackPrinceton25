@@ -40,87 +40,136 @@ const TeamView = () => {
     { id: 'devops', name: 'DevOps Team', lead: 'Tom Brown', members: 5, focus: 'Infrastructure Upgrade' }
   ]
 
-  const velocityData = [
-    { sprint: 'S1', planned: 45, completed: 42 },
-    { sprint: 'S2', planned: 50, completed: 48 },
-    { sprint: 'S3', planned: 48, completed: 45 },
-    { sprint: 'S4', planned: 52, completed: 50 },
-    { sprint: 'S5', planned: 55, completed: 52 },
-    { sprint: 'S6', planned: 53, completed: 51 }
-  ]
+  // Team-specific velocity data
+  const teamVelocityData = {
+    backend: [
+      { sprint: 'S1', planned: 45, completed: 42 },
+      { sprint: 'S2', planned: 50, completed: 48 },
+      { sprint: 'S3', planned: 48, completed: 45 },
+      { sprint: 'S4', planned: 52, completed: 50 },
+      { sprint: 'S5', planned: 55, completed: 52 },
+      { sprint: 'S6', planned: 53, completed: 51 }
+    ],
+    frontend: [
+      { sprint: 'S1', planned: 38, completed: 36 },
+      { sprint: 'S2', planned: 42, completed: 41 },
+      { sprint: 'S3', planned: 40, completed: 38 },
+      { sprint: 'S4', planned: 45, completed: 44 },
+      { sprint: 'S5', planned: 48, completed: 47 },
+      { sprint: 'S6', planned: 46, completed: 45 }
+    ],
+    mobile: [
+      { sprint: 'S1', planned: 32, completed: 30 },
+      { sprint: 'S2', planned: 35, completed: 33 },
+      { sprint: 'S3', planned: 34, completed: 32 },
+      { sprint: 'S4', planned: 38, completed: 37 },
+      { sprint: 'S5', planned: 40, completed: 38 },
+      { sprint: 'S6', planned: 39, completed: 38 }
+    ],
+    devops: [
+      { sprint: 'S1', planned: 28, completed: 27 },
+      { sprint: 'S2', planned: 30, completed: 29 },
+      { sprint: 'S3', planned: 32, completed: 30 },
+      { sprint: 'S4', planned: 35, completed: 34 },
+      { sprint: 'S5', planned: 33, completed: 32 },
+      { sprint: 'S6', planned: 36, completed: 35 }
+    ]
+  }
 
-  const kpis = [
-    { label: 'Velocity', value: '52', trend: '+8%', status: 'up', icon: ArrowUp },
-    { label: 'Burn Rate', value: '94%', trend: 'On track', status: 'good', icon: CheckmarkFilled },
-    { label: 'Carryover', value: '3', trend: '-2 from last', status: 'good', icon: Time },
-    { label: 'Incidents', value: '1', trend: 'P2 open', status: 'warning', icon: WarningAlt }
-  ]
+  // Team-specific KPIs
+  const teamKPIs = {
+    backend: [
+      { label: 'Velocity', value: '52', trend: '+8%', status: 'up', icon: ArrowUp },
+      { label: 'Burn Rate', value: '94%', trend: 'On track', status: 'good', icon: CheckmarkFilled },
+      { label: 'Carryover', value: '3', trend: '-2 from last', status: 'good', icon: Time },
+      { label: 'Incidents', value: '1', trend: 'P2 open', status: 'warning', icon: WarningAlt }
+    ],
+    frontend: [
+      { label: 'Velocity', value: '45', trend: '+12%', status: 'up', icon: ArrowUp },
+      { label: 'Burn Rate', value: '97%', trend: 'Excellent', status: 'good', icon: CheckmarkFilled },
+      { label: 'Carryover', value: '1', trend: '-3 from last', status: 'good', icon: Time },
+      { label: 'Incidents', value: '0', trend: 'All clear', status: 'good', icon: CheckmarkFilled }
+    ],
+    mobile: [
+      { label: 'Velocity', value: '38', trend: '+5%', status: 'up', icon: ArrowUp },
+      { label: 'Burn Rate', value: '89%', trend: 'Good pace', status: 'good', icon: CheckmarkFilled },
+      { label: 'Carryover', value: '2', trend: 'Same as last', status: 'warning', icon: Time },
+      { label: 'Incidents', value: '2', trend: 'P3 open', status: 'warning', icon: WarningAlt }
+    ],
+    devops: [
+      { label: 'Velocity', value: '35', trend: '+15%', status: 'up', icon: ArrowUp },
+      { label: 'Burn Rate', value: '91%', trend: 'On track', status: 'good', icon: CheckmarkFilled },
+      { label: 'Carryover', value: '4', trend: '+1 from last', status: 'warning', icon: Time },
+      { label: 'Incidents', value: '3', trend: '1 P1, 2 P2', status: 'warning', icon: WarningAlt }
+    ]
+  }
 
-  const teamMembers = [
-    { 
-      name: 'Sarah Chen', 
-      role: 'Team Lead', 
-      avatar: 'SC',
-      avatarImg: SarahChenImg,
-      lastUpdate: '2 hours ago',
-      openTasks: 5,
-      recentPRs: 3,
-      status: 'active',
-      focus: 'API authentication refactor'
-    },
-    { 
-      name: 'Alex Kumar', 
-      role: 'Senior Engineer', 
-      avatar: 'AK',
-      avatarImg: AlexKumarImg,
-      lastUpdate: '1 hour ago',
-      openTasks: 4,
-      recentPRs: 2,
-      status: 'active',
-      focus: 'Database optimization'
-    },
-    { 
-      name: 'Emily Rodriguez', 
-      role: 'Engineer', 
-      avatar: 'ER',
-      avatarImg: EmilyRodriguezImg,
-      lastUpdate: '3 hours ago',
-      openTasks: 6,
-      recentPRs: 1,
-      status: 'active',
-      focus: 'Payment gateway integration'
-    },
-    { 
-      name: 'David Park', 
-      role: 'Engineer', 
-      avatar: 'DP',
-      avatarImg: null,
-      lastUpdate: '5 hours ago',
-      openTasks: 3,
-      recentPRs: 4,
-      status: 'away',
-      focus: 'Microservices migration'
-    },
-    { 
-      name: 'Maria Santos', 
-      role: 'Junior Engineer', 
-      avatar: 'MS',
-      avatarImg: null,
-      lastUpdate: '1 day ago',
-      openTasks: 2,
-      recentPRs: 1,
-      status: 'active',
-      focus: 'Testing automation'
-    },
-  ]
+  const velocityData = teamVelocityData[selectedTeam] || teamVelocityData.backend
+  const kpis = teamKPIs[selectedTeam] || teamKPIs.backend
 
-  const backlogItems = [
-    { id: 'BACK-234', title: 'Implement OAuth 2.0 flow', status: 'In Progress', priority: 'high', assignee: 'Sarah Chen', points: 8 },
-    { id: 'BACK-235', title: 'Optimize database queries', status: 'In Progress', priority: 'high', assignee: 'Alex Kumar', points: 5 },
-    { id: 'BACK-236', title: 'Add rate limiting middleware', status: 'To Do', priority: 'medium', assignee: 'Emily Rodriguez', points: 3 },
-    { id: 'BACK-237', title: 'Update API documentation', status: 'To Do', priority: 'low', assignee: 'David Park', points: 2 },
-    { id: 'BACK-238', title: 'Fix memory leak in worker', status: 'In Review', priority: 'high', assignee: 'Alex Kumar', points: 5 }
-  ]
+  // Team-specific members
+  const teamMembersData = {
+    backend: [
+      { name: 'Sarah Chen', role: 'Team Lead', avatar: 'SC', avatarImg: SarahChenImg, lastUpdate: '2 hours ago', openTasks: 5, recentPRs: 3, status: 'active', focus: 'API authentication refactor' },
+      { name: 'Alex Kumar', role: 'Senior Engineer', avatar: 'AK', avatarImg: AlexKumarImg, lastUpdate: '1 hour ago', openTasks: 4, recentPRs: 2, status: 'active', focus: 'Database optimization' },
+      { name: 'Emily Rodriguez', role: 'Engineer', avatar: 'ER', avatarImg: EmilyRodriguezImg, lastUpdate: '3 hours ago', openTasks: 6, recentPRs: 1, status: 'active', focus: 'Payment gateway integration' },
+      { name: 'David Park', role: 'Engineer', avatar: 'DP', avatarImg: null, lastUpdate: '5 hours ago', openTasks: 3, recentPRs: 4, status: 'away', focus: 'Microservices migration' },
+      { name: 'Maria Santos', role: 'Junior Engineer', avatar: 'MS', avatarImg: null, lastUpdate: '1 day ago', openTasks: 2, recentPRs: 1, status: 'active', focus: 'Testing automation' }
+    ],
+    frontend: [
+      { name: 'Mike Johnson', role: 'Team Lead', avatar: 'MJ', avatarImg: null, lastUpdate: '1 hour ago', openTasks: 7, recentPRs: 4, status: 'active', focus: 'Component library redesign' },
+      { name: 'Lisa Wang', role: 'Senior Engineer', avatar: 'LW', avatarImg: null, lastUpdate: '30 min ago', openTasks: 5, recentPRs: 3, status: 'active', focus: 'Dashboard UI improvements' },
+      { name: 'James Wilson', role: 'Engineer', avatar: 'JW', avatarImg: null, lastUpdate: '2 hours ago', openTasks: 4, recentPRs: 2, status: 'active', focus: 'Responsive design fixes' },
+      { name: 'Nina Patel', role: 'Engineer', avatar: 'NP', avatarImg: null, lastUpdate: '4 hours ago', openTasks: 6, recentPRs: 1, status: 'active', focus: 'Accessibility improvements' }
+    ],
+    mobile: [
+      { name: 'Lisa Wang', role: 'Team Lead', avatar: 'LW', avatarImg: null, lastUpdate: '45 min ago', openTasks: 4, recentPRs: 2, status: 'active', focus: 'iOS app store submission' },
+      { name: 'Carlos Martinez', role: 'Senior Engineer', avatar: 'CM', avatarImg: null, lastUpdate: '2 hours ago', openTasks: 5, recentPRs: 3, status: 'active', focus: 'Push notification system' },
+      { name: 'Priya Singh', role: 'Engineer', avatar: 'PS', avatarImg: null, lastUpdate: '3 hours ago', openTasks: 3, recentPRs: 1, status: 'active', focus: 'Offline mode implementation' },
+      { name: 'Tom Chen', role: 'Engineer', avatar: 'TC', avatarImg: null, lastUpdate: '1 day ago', openTasks: 2, recentPRs: 2, status: 'away', focus: 'Performance optimization' }
+    ],
+    devops: [
+      { name: 'Tom Brown', role: 'Team Lead', avatar: 'TB', avatarImg: null, lastUpdate: '3 hours ago', openTasks: 6, recentPRs: 2, status: 'active', focus: 'Kubernetes migration' },
+      { name: 'Rachel Green', role: 'Senior Engineer', avatar: 'RG', avatarImg: null, lastUpdate: '1 hour ago', openTasks: 4, recentPRs: 3, status: 'active', focus: 'CI/CD pipeline optimization' },
+      { name: 'Kevin Liu', role: 'Engineer', avatar: 'KL', avatarImg: null, lastUpdate: '5 hours ago', openTasks: 5, recentPRs: 1, status: 'active', focus: 'Monitoring setup' },
+      { name: 'Sophie Turner', role: 'Engineer', avatar: 'ST', avatarImg: null, lastUpdate: '2 hours ago', openTasks: 3, recentPRs: 2, status: 'active', focus: 'Security hardening' }
+    ]
+  }
+
+  // Team-specific backlog
+  const teamBacklogData = {
+    backend: [
+      { id: 'BACK-234', title: 'Implement OAuth 2.0 flow', status: 'In Progress', priority: 'high', assignee: 'Sarah Chen', points: 8 },
+      { id: 'BACK-235', title: 'Optimize database queries', status: 'In Progress', priority: 'high', assignee: 'Alex Kumar', points: 5 },
+      { id: 'BACK-236', title: 'Add rate limiting middleware', status: 'To Do', priority: 'medium', assignee: 'Emily Rodriguez', points: 3 },
+      { id: 'BACK-237', title: 'Update API documentation', status: 'To Do', priority: 'low', assignee: 'David Park', points: 2 },
+      { id: 'BACK-238', title: 'Fix memory leak in worker', status: 'In Review', priority: 'high', assignee: 'Alex Kumar', points: 5 }
+    ],
+    frontend: [
+      { id: 'FRONT-101', title: 'Redesign navigation component', status: 'In Progress', priority: 'high', assignee: 'Mike Johnson', points: 8 },
+      { id: 'FRONT-102', title: 'Implement dark mode', status: 'In Progress', priority: 'medium', assignee: 'Lisa Wang', points: 5 },
+      { id: 'FRONT-103', title: 'Fix responsive layout bugs', status: 'To Do', priority: 'high', assignee: 'James Wilson', points: 3 },
+      { id: 'FRONT-104', title: 'Add keyboard shortcuts', status: 'To Do', priority: 'low', assignee: 'Nina Patel', points: 2 },
+      { id: 'FRONT-105', title: 'Optimize bundle size', status: 'In Review', priority: 'medium', assignee: 'Lisa Wang', points: 5 }
+    ],
+    mobile: [
+      { id: 'MOB-45', title: 'iOS app store submission', status: 'In Progress', priority: 'high', assignee: 'Lisa Wang', points: 13 },
+      { id: 'MOB-46', title: 'Implement push notifications', status: 'In Progress', priority: 'high', assignee: 'Carlos Martinez', points: 8 },
+      { id: 'MOB-47', title: 'Add offline mode', status: 'To Do', priority: 'medium', assignee: 'Priya Singh', points: 5 },
+      { id: 'MOB-48', title: 'Optimize app performance', status: 'In Review', priority: 'medium', assignee: 'Tom Chen', points: 5 },
+      { id: 'MOB-49', title: 'Fix camera integration', status: 'To Do', priority: 'low', assignee: 'Carlos Martinez', points: 3 }
+    ],
+    devops: [
+      { id: 'OPS-78', title: 'Migrate to Kubernetes', status: 'In Progress', priority: 'high', assignee: 'Tom Brown', points: 13 },
+      { id: 'OPS-79', title: 'Setup monitoring dashboards', status: 'In Progress', priority: 'high', assignee: 'Kevin Liu', points: 8 },
+      { id: 'OPS-80', title: 'Optimize CI/CD pipeline', status: 'To Do', priority: 'medium', assignee: 'Rachel Green', points: 5 },
+      { id: 'OPS-81', title: 'Security audit and fixes', status: 'In Review', priority: 'high', assignee: 'Sophie Turner', points: 8 },
+      { id: 'OPS-82', title: 'Database backup automation', status: 'To Do', priority: 'medium', assignee: 'Kevin Liu', points: 3 }
+    ]
+  }
+
+  const teamMembers = teamMembersData[selectedTeam] || teamMembersData.backend
+  const backlogItems = teamBacklogData[selectedTeam] || teamBacklogData.backend
 
   const currentTeam = teams.find(t => t.id === selectedTeam)
 
