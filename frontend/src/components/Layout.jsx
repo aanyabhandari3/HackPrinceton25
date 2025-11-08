@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { 
   Home, UserMultiple, User, Bot, Document, Chat as ChatIcon, 
   Settings, Menu, Close, Notification, Search, ChevronDown, Add, Hashtag,
@@ -10,15 +10,67 @@ const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [teamsExpanded, setTeamsExpanded] = useState(true)
   const [toolsExpanded, setToolsExpanded] = useState(true)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+
+  const notifications = [
+    {
+      id: 1,
+      type: 'mention',
+      title: 'Sarah Chen mentioned you',
+      message: 'in #backend-team: "Can you review the API changes?"',
+      time: '5 min ago',
+      unread: true
+    },
+    {
+      id: 2,
+      type: 'update',
+      title: 'Sprint Planning Complete',
+      message: 'Backend Team has completed sprint planning for Sprint 24',
+      time: '1 hour ago',
+      unread: true
+    },
+    {
+      id: 3,
+      type: 'alert',
+      title: 'Critical Issue Detected',
+      message: 'Production API response time exceeded threshold',
+      time: '2 hours ago',
+      unread: false
+    },
+    {
+      id: 4,
+      type: 'success',
+      title: 'Deployment Successful',
+      message: 'v2.3.0 deployed to production successfully',
+      time: '3 hours ago',
+      unread: false
+    },
+    {
+      id: 5,
+      type: 'mention',
+      title: 'Alex Kumar assigned you',
+      message: 'to task BACK-235: Optimize database queries',
+      time: '5 hours ago',
+      unread: false
+    }
+  ]
 
   const teams = [
-    { id: 1, name: 'Backend Team', color: 'bg-blue-500', unread: 3 },
-    { id: 2, name: 'Frontend Team', color: 'bg-green-500', unread: 0 },
-    { id: 3, name: 'Mobile Team', color: 'bg-purple-500', unread: 1 },
-    { id: 4, name: 'DevOps Team', color: 'bg-orange-500', unread: 0 },
-    { id: 5, name: 'QA Team', color: 'bg-pink-500', unread: 0 },
+    { id: 'backend', name: 'Backend Team', color: 'bg-blue-500', unread: 3 },
+    { id: 'frontend', name: 'Frontend Team', color: 'bg-green-500', unread: 0 },
+    { id: 'mobile', name: 'Mobile Team', color: 'bg-purple-500', unread: 1 },
+    { id: 'devops', name: 'DevOps Team', color: 'bg-orange-500', unread: 0 },
+    { id: 'qa', name: 'QA Team', color: 'bg-pink-500', unread: 0 },
   ]
+
+  const handleAddTeam = () => {
+    const teamName = prompt('Enter new team name:')
+    if (teamName && teamName.trim()) {
+      alert(`Team "${teamName}" would be created here. This is a demo.`)
+    }
+  }
 
   const tools = [
     { name: 'Overview', href: '/', icon: Home },
@@ -29,7 +81,11 @@ const Layout = ({ children }) => {
   ]
 
   const isActive = (path) => location.pathname === path
-  const isTeamActive = () => location.pathname === '/teams'
+  const isTeamActive = (teamId) => {
+    if (location.pathname !== '/teams') return false
+    const params = new URLSearchParams(location.search)
+    return params.get('team') === teamId
+  }
 
   return (
     <div className="flex h-screen" style={{ backgroundColor: '#f4f4f4' }}>
@@ -60,28 +116,6 @@ const Layout = ({ children }) => {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-3 overflow-y-auto">
-          {/* Quick Access */}
-          {sidebarOpen && (
-            <div className="mb-4 space-y-0.5">
-              <Link
-                to="/chat"
-                className="flex items-center space-x-2 px-2 py-2 transition-colors hover:bg-[#262626]"
-                style={{ color: '#c6c6c6' }}
-              >
-                <ChatIcon size={16} style={{ color: '#c6c6c6' }} />
-                <span className="text-sm">All DMs</span>
-              </Link>
-              <Link
-                to="/"
-                className="flex items-center space-x-2 px-2 py-2 transition-colors hover:bg-[#262626]"
-                style={{ color: '#c6c6c6' }}
-              >
-                <StarIcon size={16} style={{ color: '#c6c6c6' }} />
-                <span className="text-sm">Starred</span>
-              </Link>
-            </div>
-          )}
-
           {/* Teams Section */}
           <div className="mb-6">
             <button
@@ -94,18 +128,20 @@ const Layout = ({ children }) => {
             </button>
             {teamsExpanded && (
               <div className="space-y-0.5">
-                {teams.map((team) => (
+                {teams.map((team) => {
+                  const active = isTeamActive(team.id)
+                  return (
                   <Link
                     key={team.id}
-                    to="/teams"
+                    to={`/teams?team=${team.id}`}
                     className={`flex items-center justify-between px-2 py-2 transition-colors group ${
-                      isTeamActive() ? 'bg-[#393939]' : 'hover:bg-[#262626]'
+                      active ? 'bg-[#393939]' : 'hover:bg-[#262626]'
                     }`}
                   >
                     <div className="flex items-center space-x-2 flex-1 min-w-0">
-                      <Hashtag size={16} className="flex-shrink-0" style={{ color: isTeamActive() ? '#ffffff' : '#8d8d8d' }} />
+                      <Hashtag size={16} className="flex-shrink-0" style={{ color: active ? '#ffffff' : '#8d8d8d' }} />
                       {sidebarOpen && (
-                        <span className={`text-sm truncate ${isTeamActive() ? 'font-medium' : ''}`} style={{ color: isTeamActive() ? '#ffffff' : '#c6c6c6' }}>
+                        <span className={`text-sm truncate ${active ? 'font-medium' : ''}`} style={{ color: active ? '#ffffff' : '#c6c6c6' }}>
                           {team.name}
                         </span>
                       )}
@@ -119,9 +155,14 @@ const Layout = ({ children }) => {
                       <span className="absolute right-1 top-1 w-2 h-2 rounded-full" style={{ backgroundColor: '#da1e28' }}></span>
                     )}
                   </Link>
-                ))}
+                  )
+                })}
                 {sidebarOpen && (
-                  <button className="w-full flex items-center space-x-2 px-2 py-2 text-sm transition-colors hover:bg-[#262626]" style={{ color: '#8d8d8d' }}>
+                  <button 
+                    onClick={handleAddTeam}
+                    className="w-full flex items-center space-x-2 px-2 py-2 text-sm transition-colors hover:bg-[#262626]" 
+                    style={{ color: '#8d8d8d' }}
+                  >
                     <Add size={16} />
                     <span>Add team</span>
                   </button>
@@ -252,10 +293,102 @@ const Layout = ({ children }) => {
           </div>
           
           <div className="flex items-center space-x-2">
-            <button className="relative p-2 transition-colors hover:bg-[#e0e0e0]" style={{ color: '#161616' }}>
-              <Notification size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ backgroundColor: '#da1e28' }}></span>
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setNotificationsOpen(!notificationsOpen)}
+                className="relative p-2 transition-colors hover:bg-[#e0e0e0]" 
+                style={{ color: '#161616' }}
+              >
+                <Notification size={20} />
+                {notifications.some(n => n.unread) && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ backgroundColor: '#da1e28' }}></span>
+                )}
+              </button>
+
+              {/* Notifications Dropdown */}
+              {notificationsOpen && (
+                <div 
+                  className="absolute right-0 mt-2 w-96 shadow-lg z-50"
+                  style={{ 
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e0e0e0',
+                    maxHeight: '500px',
+                    overflow: 'hidden'
+                  }}
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #e0e0e0' }}>
+                    <h3 className="text-sm font-semibold" style={{ color: '#161616' }}>Notifications</h3>
+                    <button 
+                      className="text-xs transition-colors hover:underline"
+                      style={{ color: '#0f62fe' }}
+                      onClick={() => {
+                        // Mark all as read functionality
+                        setNotificationsOpen(false)
+                      }}
+                    >
+                      Mark all as read
+                    </button>
+                  </div>
+
+                  {/* Notifications List */}
+                  <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    {notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className="px-4 py-3 transition-colors cursor-pointer"
+                        style={{ 
+                          borderBottom: '1px solid #f4f4f4',
+                          backgroundColor: notification.unread ? '#f4f4f4' : '#ffffff'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e0e0e0'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = notification.unread ? '#f4f4f4' : '#ffffff'}
+                        onClick={() => setNotificationsOpen(false)}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0 mt-1">
+                            {notification.type === 'mention' && (
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#0f62fe' }}></div>
+                            )}
+                            {notification.type === 'alert' && (
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#da1e28' }}></div>
+                            )}
+                            {notification.type === 'success' && (
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#24a148' }}></div>
+                            )}
+                            {notification.type === 'update' && (
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#8a3ffc' }}></div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium" style={{ color: '#161616' }}>
+                              {notification.title}
+                            </p>
+                            <p className="text-xs mt-0.5" style={{ color: '#525252' }}>
+                              {notification.message}
+                            </p>
+                            <p className="text-xs mt-1" style={{ color: '#8d8d8d' }}>
+                              {notification.time}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Footer */}
+                  <div 
+                    className="px-4 py-3 text-center cursor-pointer transition-colors"
+                    style={{ borderTop: '1px solid #e0e0e0' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f4f4f4'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+                    onClick={() => setNotificationsOpen(false)}
+                  >
+                    <span className="text-sm" style={{ color: '#0f62fe' }}>View all notifications</span>
+                  </div>
+                </div>
+              )}
+            </div>
             
             <button className="px-3 py-1.5 text-white text-sm font-medium transition-colors flex items-center space-x-1.5" style={{ backgroundColor: '#0f62fe' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#0353e9'} onMouseLeave={(e) => e.target.style.backgroundColor = '#0f62fe'}>
               <Bot size={16} />

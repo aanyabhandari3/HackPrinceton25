@@ -1,13 +1,29 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { 
   UserMultiple, ArrowUp, WarningAlt, CheckmarkFilled, Time, 
-  Chat as ChatIcon, Add, Filter, RequestQuote, Code, Debug 
+  Chat as ChatIcon, Add, Filter, RequestQuote, Code, Debug, Branch 
 } from '@carbon/icons-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
 
 const TeamView = () => {
-  const [selectedTeam, setSelectedTeam] = useState('backend')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const teamFromUrl = searchParams.get('team') || 'backend'
+  const [selectedTeam, setSelectedTeam] = useState(teamFromUrl)
   const [activeTab, setActiveTab] = useState('overview')
+
+  // Sync selectedTeam with URL parameter
+  useEffect(() => {
+    const teamParam = searchParams.get('team') || 'backend'
+    if (teamParam !== selectedTeam) {
+      setSelectedTeam(teamParam)
+    }
+  }, [searchParams])
+
+  // Update URL when team is changed via dropdown
+  const handleTeamChange = (newTeamId) => {
+    setSearchParams({ team: newTeamId })
+  }
 
   const teams = [
     { id: 'backend', name: 'Backend Team', lead: 'Sarah Chen', members: 10, focus: 'API v3 Migration' },
@@ -121,7 +137,7 @@ const TeamView = () => {
         <div className="flex items-center space-x-4">
           <select 
             value={selectedTeam}
-            onChange={(e) => setSelectedTeam(e.target.value)}
+            onChange={(e) => handleTeamChange(e.target.value)}
             className="px-3 py-2 text-lg font-semibold focus:outline-none"
             style={{ 
               backgroundColor: '#f4f4f4',
@@ -211,7 +227,7 @@ const TeamView = () => {
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <GitPullRequest className="w-5 h-5 text-blue-600" />
+                  <Branch className="w-5 h-5 text-blue-600" />
                 </div>
                 <h3 className="font-semibold text-gray-900">Pull Requests</h3>
               </div>
@@ -257,7 +273,7 @@ const TeamView = () => {
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="p-2 bg-red-100 rounded-lg">
-                  <Bug className="w-5 h-5 text-red-600" />
+                  <Debug className="w-5 h-5 text-red-600" />
                 </div>
                 <h3 className="font-semibold text-gray-900">Issues</h3>
               </div>
@@ -334,7 +350,7 @@ const TeamView = () => {
         <div className="bg-white rounded-xl border border-gray-200 p-6 min-h-[500px] flex flex-col">
           <div className="flex items-center space-x-3 mb-6 pb-4 border-b border-gray-200">
             <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-              <MessageSquare className="w-6 h-6 text-white" />
+              <ChatIcon className="w-6 h-6 text-white" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Team AI Agent</h2>
@@ -391,7 +407,7 @@ const TeamView = () => {
               </button>
             </div>
             <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-              <Plus className="w-4 h-4" />
+              <Add className="w-4 h-4" />
               <span>New Task</span>
             </button>
           </div>

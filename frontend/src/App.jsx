@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import Layout from './components/Layout'
-import HomePage from './pages/HomePage'
-import TeamView from './pages/TeamView'
-import PeopleView from './pages/PeopleView'
-import AgentsHub from './pages/AgentsHub'
-import ReportsCenter from './pages/ReportsCenter'
-import ChatPage from './pages/ChatPage'
-import SettingsPage from './pages/SettingsPage'
+import Layout from './components/Layout.jsx'
+import HomePage from './pages/HomePage.jsx'
+import TeamView from './pages/TeamView.jsx'
+import PeopleView from './pages/PeopleView.jsx'
+import AgentsHub from './pages/AgentsHub.jsx'
+import ReportsCenter from './pages/ReportsCenter.jsx'
+import ChatPage from './pages/ChatPage.jsx'
+import SettingsPage from './pages/SettingsPage.jsx'
 
 function App() {
   return (

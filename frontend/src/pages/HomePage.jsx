@@ -3,9 +3,9 @@ import {
   ArrowUp, WarningAlt, CheckmarkFilled, Activity, Calendar, Filter, Download, Renew 
 } from '@carbon/icons-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Button, Card, StatCard, Select } from '../components/ui'
-import { activityData, teamActivity, recentHighlights, upcomingDeadlines } from '../data/mockData'
-import { COLORS } from '../constants/theme'
+import { Button, Card, StatCard, Select } from '../components/ui/index.js'
+import { activityData, teamActivity, recentHighlights, upcomingDeadlines } from '../data/mockData.js'
+import { COLORS } from '../constants/theme.js'
 
 const HomePage = () => {
   const [dateRange, setDateRange] = useState('7d')
@@ -171,7 +171,7 @@ const HomePage = () => {
           <h3 className="text-base font-semibold mb-4" style={{ color: '#161616' }}>Recent Highlights</h3>
           <div className="space-y-4">
             {recentHighlights.map((highlight, index) => {
-              const Icon = highlight.icon
+              const Icon = highlightIcons[highlight.type]
               const typeColors = {
                 success: 'bg-green-100 text-green-600',
                 warning: 'bg-orange-100 text-orange-600',
