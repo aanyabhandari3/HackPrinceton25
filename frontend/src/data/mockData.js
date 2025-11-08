@@ -1,3 +1,12 @@
+// Mock data for the application
+
+// Import profile images
+import SarahChenImg from '../assets/profiles/SarahChen.png'
+import AlexKumarImg from '../assets/profiles/AlexKumar.png'
+import LisaWangImg from '../assets/profiles/LisaWang.png'
+import MikeJohnsonImg from '../assets/profiles/MikeJohnson.png'
+import EmilyRodriguezImg from '../assets/profiles/EmilyRodriguez.png'
+
 // Teams Data
 export const teams = [
   { id: 'backend', name: 'Backend Team', lead: 'Sarah Chen', members: 10, focus: 'API v3 Migration', unread: 3 },
@@ -79,6 +88,7 @@ export const teamMembers = [
     name: 'Sarah Chen',
     role: 'Team Lead',
     avatar: 'SC',
+    avatarImg: SarahChenImg,
     lastUpdate: '2 hours ago',
     openTasks: 5,
     recentPRs: 3,
@@ -89,6 +99,7 @@ export const teamMembers = [
     name: 'Alex Kumar',
     role: 'Senior Engineer',
     avatar: 'AK',
+    avatarImg: AlexKumarImg,
     lastUpdate: '1 hour ago',
     openTasks: 7,
     recentPRs: 5,
@@ -96,24 +107,26 @@ export const teamMembers = [
     focus: 'Database optimization',
   },
   {
-    name: 'Maria Garcia',
+    name: 'Lisa Wang',
     role: 'Engineer',
-    avatar: 'MG',
+    avatar: 'LW',
+    avatarImg: LisaWangImg,
     lastUpdate: '30 min ago',
     openTasks: 4,
     recentPRs: 2,
     status: 'active',
-    focus: 'Payment gateway integration',
+    focus: 'Mobile app development',
   },
   {
-    name: 'James Wilson',
+    name: 'Mike Johnson',
     role: 'Engineer',
-    avatar: 'JW',
+    avatar: 'MJ',
+    avatarImg: MikeJohnsonImg,
     lastUpdate: '3 hours ago',
     openTasks: 6,
     recentPRs: 4,
     status: 'away',
-    focus: 'Microservices migration',
+    focus: 'Frontend redesign',
   },
 ]
 

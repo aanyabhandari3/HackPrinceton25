@@ -5,6 +5,11 @@ import {
   FileText, Star, Calendar
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import SarahChenImg from '../assets/profiles/SarahChen.png'
+import AlexKumarImg from '../assets/profiles/AlexKumar.png'
+import LisaWangImg from '../assets/profiles/LisaWang.png'
+import MikeJohnsonImg from '../assets/profiles/MikeJohnson.png'
+import EmilyRodriguezImg from '../assets/profiles/EmilyRodriguez.png'
 
 const PeopleView = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -19,6 +24,7 @@ const PeopleView = () => {
       role: 'Team Lead',
       team: 'Backend',
       avatar: 'SC',
+      avatarImg: SarahChenImg,
       email: 'sarah.chen@company.com',
       lastActivity: '2 hours ago',
       openTasks: 5,
@@ -48,6 +54,7 @@ const PeopleView = () => {
       role: 'Senior Engineer',
       team: 'Backend',
       avatar: 'AK',
+      avatarImg: AlexKumarImg,
       email: 'alex.kumar@company.com',
       lastActivity: '1 hour ago',
       openTasks: 4,
@@ -77,6 +84,7 @@ const PeopleView = () => {
       role: 'Team Lead',
       team: 'Frontend',
       avatar: 'MJ',
+      avatarImg: MikeJohnsonImg,
       email: 'mike.johnson@company.com',
       lastActivity: '3 hours ago',
       openTasks: 6,
@@ -106,6 +114,7 @@ const PeopleView = () => {
       role: 'Engineer',
       team: 'Backend',
       avatar: 'ER',
+      avatarImg: EmilyRodriguezImg,
       email: 'emily.rodriguez@company.com',
       lastActivity: '4 hours ago',
       openTasks: 6,
@@ -235,9 +244,17 @@ const PeopleView = () => {
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-start space-x-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
-                  {person.avatar}
-                </div>
+                {person.avatarImg ? (
+                  <img 
+                    src={person.avatarImg} 
+                    alt={person.name}
+                    className="w-14 h-14 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                    {person.avatar}
+                  </div>
+                )}
                 <div>
                   <h3 className="font-semibold text-lg text-gray-900">{person.name}</h3>
                   <p className="text-sm text-gray-500">{person.role} • {person.team}</p>

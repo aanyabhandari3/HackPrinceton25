@@ -6,6 +6,9 @@ import {
 } from '@carbon/icons-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
 import { useAIChat } from '../hooks/useAIChat.js'
+import SarahChenImg from '../assets/profiles/SarahChen.png'
+import AlexKumarImg from '../assets/profiles/AlexKumar.png'
+import EmilyRodriguezImg from '../assets/profiles/EmilyRodriguez.png'
 
 const TeamView = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -58,6 +61,7 @@ const TeamView = () => {
       name: 'Sarah Chen', 
       role: 'Team Lead', 
       avatar: 'SC',
+      avatarImg: SarahChenImg,
       lastUpdate: '2 hours ago',
       openTasks: 5,
       recentPRs: 3,
@@ -68,6 +72,7 @@ const TeamView = () => {
       name: 'Alex Kumar', 
       role: 'Senior Engineer', 
       avatar: 'AK',
+      avatarImg: AlexKumarImg,
       lastUpdate: '1 hour ago',
       openTasks: 4,
       recentPRs: 2,
@@ -78,6 +83,7 @@ const TeamView = () => {
       name: 'Emily Rodriguez', 
       role: 'Engineer', 
       avatar: 'ER',
+      avatarImg: EmilyRodriguezImg,
       lastUpdate: '3 hours ago',
       openTasks: 6,
       recentPRs: 1,
@@ -88,22 +94,24 @@ const TeamView = () => {
       name: 'David Park', 
       role: 'Engineer', 
       avatar: 'DP',
+      avatarImg: null,
       lastUpdate: '5 hours ago',
       openTasks: 3,
       recentPRs: 4,
-      status: 'active',
-      focus: 'Webhook system redesign'
+      status: 'away',
+      focus: 'Microservices migration'
     },
     { 
       name: 'Maria Santos', 
       role: 'Junior Engineer', 
       avatar: 'MS',
+      avatarImg: null,
       lastUpdate: '1 day ago',
       openTasks: 2,
       recentPRs: 1,
-      status: 'away',
-      focus: 'Unit test coverage'
-    }
+      status: 'active',
+      focus: 'Testing automation'
+    },
   ]
 
   const backlogItems = [
@@ -308,9 +316,17 @@ const TeamView = () => {
             <div key={index} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                    {member.avatar}
-                  </div>
+                  {member.avatarImg ? (
+                    <img 
+                      src={member.avatarImg} 
+                      alt={member.name}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                      {member.avatar}
+                    </div>
+                  )}
                   <div>
                     <div className="flex items-center space-x-2">
                       <h3 className="font-semibold text-gray-900">{member.name}</h3>
