@@ -122,5 +122,161 @@ export class UIManager {
     onConfigChange(callback) {
         this.onConfigChangeCallback = callback;
     }
+
+    // Report Display Methods
+    showReportLoading() {
+        const reportContent = document.getElementById('report-content');
+        reportContent.innerHTML = `
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Analyzing impact...</p>
+            </div>
+        `;
+    }
+
+    displayReport(data) {
+        const reportContent = document.getElementById('report-content');
+        
+        if (!data || !data.impacts) {
+            this.showReportError('No data received');
+            return;
+        }
+
+        const impacts = data.impacts;
+        
+        reportContent.innerHTML = `
+            <!-- Location Info -->
+            <div class="report-section">
+                <h3>📍 Location Details</h3>
+                <div class="report-row">
+                    <span class="label">Latitude</span>
+                    <span class="value">${data.location?.latitude?.toFixed(4) || 'N/A'}</span>
+                </div>
+                <div class="report-row">
+                    <span class="label">Longitude</span>
+                    <span class="value">${data.location?.longitude?.toFixed(4) || 'N/A'}</span>
+                </div>
+                <div class="report-row">
+                    <span class="label">City</span>
+                    <span class="value">${data.location?.city || 'Unknown'}</span>
+                </div>
+                <div class="report-row">
+                    <span class="label">State</span>
+                    <span class="value">${data.location?.state || 'Unknown'}</span>
+                </div>
+            </div>
+
+            <!-- Data Center Config -->
+            <div class="report-section">
+                <h3>🖥️ Data Center Configuration</h3>
+                <div class="report-row">
+                    <span class="label">Type</span>
+                    <span class="value">${data.data_center?.name || 'Custom'}</span>
+                </div>
+                <div class="report-row">
+                    <span class="label">Power</span>
+                    <span class="value">${data.data_center?.power_mw || 0} MW</span>
+                </div>
+                <div class="report-row">
+                    <span class="label">Servers</span>
+                    <span class="value">${(data.data_center?.servers || 0).toLocaleString()}</span>
+                </div>
+                <div class="report-row">
+                    <span class="label">Size</span>
+                    <span class="value">${(data.data_center?.square_feet || 0).toLocaleString()} sq ft</span>
+                </div>
+            </div>
+
+            <!-- Environmental Impact -->
+            <div class="report-section">
+                <h3>🌍 Environmental Impact</h3>
+                <div class="report-row">
+                    <span class="label">Annual CO₂</span>
+                    <span class="value">${(impacts.carbon_emissions_tons_per_year || 0).toLocaleString()} tons/year</span>
+                </div>
+                <div class="report-row">
+                    <span class="label">Equivalent Cars</span>
+                    <span class="value">${(impacts.equivalent_cars || 0).toLocaleString()}</span>
+                </div>
+                <div class="report-row">
+                    <span class="label">Water Usage</span>
+                    <span class="value">${(impacts.water_usage_gallons_per_day || 0).toLocaleString()} gal/day</span>
+                </div>
+                <div class="report-row">
+                    <span class="label">Annual Energy</span>
+                    <span class="value">${(impacts.energy_consumption_mwh_per_year || 0).toLocaleString()} MWh</span>
+                </div>
+                ${impacts.carbon_intensity_lbs_co2_per_mwh ? `
+                <div class="report-highlight">
+                    Carbon Intensity: <strong>${impacts.carbon_intensity_lbs_co2_per_mwh.toFixed(1)} lbs CO₂/MWh</strong>
+                </div>
+                ` : ''}
+            </div>
+
+            <!-- Economic Impact -->
+            <div class="report-section">
+                <h3>💰 Economic Impact</h3>
+                <div class="report-row">
+                    <span class="label">Jobs Created</span>
+                    <span class="value">${impacts.jobs_created || 0}</span>
+                </div>
+                <div class="report-row">
+                    <span class="label">Annual Energy Cost</span>
+                    <span class="value">$${(impacts.annual_energy_cost || 0).toLocaleString()}</span>
+                </div>
+                <div class="report-row">
+                    <span class="label">Property Tax Impact</span>
+                    <span class="value">$${(impacts.property_tax_impact || 0).toLocaleString()}/year</span>
+                </div>
+            </div>
+
+            <!-- Infrastructure Impact -->
+            <div class="report-section">
+                <h3>🏗️ Infrastructure Impact</h3>
+                <div class="report-row">
+                    <span class="label">Grid Capacity</span>
+                    <span class="value">${impacts.grid_capacity_needed_mw || 0} MW needed</span>
+                </div>
+                <div class="report-row">
+                    <span class="label">Cooling Required</span>
+                    <span class="value">${(impacts.cooling_load_tons || 0).toLocaleString()} tons</span>
+                </div>
+            </div>
+
+            ${impacts.nearby_facilities && impacts.nearby_facilities.length > 0 ? `
+            <div class="report-section">
+                <h3>🏭 Nearby Facilities</h3>
+                ${impacts.nearby_facilities.slice(0, 5).map(facility => `
+                    <div class="report-row">
+                        <span class="label">${facility.name || 'Facility'}</span>
+                        <span class="value">${facility.distance_km?.toFixed(1) || '?'} km</span>
+                    </div>
+                `).join('')}
+            </div>
+            ` : ''}
+        `;
+    }
+
+    showReportError(message) {
+        const reportContent = document.getElementById('report-content');
+        reportContent.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">⚠️</div>
+                <p style="color: #ef4444;">Analysis Failed</p>
+                <p class="empty-hint">${message}</p>
+            </div>
+        `;
+    }
+
+    clearReport() {
+        const reportContent = document.getElementById('report-content');
+        reportContent.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <p>No analysis yet</p>
+                <p class="empty-hint">Select a location and click "Analyze Impact" to see results</p>
+            </div>
+        `;
+    }
 }
 

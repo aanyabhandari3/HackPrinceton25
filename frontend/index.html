@@ -13,13 +13,32 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Map Container -->
-    <div id="map"></div>
-    
-    <!-- Sidebar Configuration Panel -->
-    <div class="sidebar">
-        <h1>🌐 Data Center Impact Analyzer</h1>
-        <p class="subtitle">Configure and analyze environmental impact</p>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <span class="navbar-logo">🌐</span>
+            <span class="navbar-title">Data Center Impact Analyzer</span>
+        </div>
+        <div class="navbar-menu">
+            <a href="#" class="navbar-link active" onclick="switchView('analyze')">Analyze</a>
+            <a href="#" class="navbar-link" onclick="switchView('forecast')">Forecast</a>
+            <a href="#" class="navbar-link" onclick="switchView('about')">About</a>
+        </div>
+        <div class="navbar-actions">
+            <button class="navbar-btn" onclick="exportReport()">
+                📥 Export Report
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Layout Container -->
+    <div class="layout-container">
+        <!-- Analyze View -->
+        <div id="analyze-view" class="view-container active">
+        <!-- Left Panel: Configuration -->
+        <div class="left-panel">
+        <h2 class="panel-title">⚙️ Configuration</h2>
+        <p class="subtitle">Configure your data center specifications</p>
 
         <!-- Data Center Size Presets -->
         <div class="section">
@@ -106,11 +125,177 @@
         <button class="reset-btn" onclick="resetMap()">
             🔄 Reset
         </button>
-    </div>
+        </div>
 
-    <!-- Instructions Panel -->
-    <div class="instructions">
-        💡 Click on the map to place a data center
+        <!-- Center Panel: Map -->
+        <div class="center-panel">
+            <div class="panel-header">
+                <h2>📍 Map View</h2>
+                <div class="instructions-inline">
+                    💡 Click on the map to place a data center
+                </div>
+            </div>
+            <div id="map" class="map-container"></div>
+        </div>
+
+        <!-- Right Panel: Report -->
+        <div class="right-panel">
+            <div class="panel-header">
+                <h2>📊 Impact Report</h2>
+            </div>
+            <div id="report-content" class="report-content">
+                <div class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <p>No analysis yet</p>
+                    <p class="empty-hint">Select a location and click "Analyze Impact" to see results</p>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Forecast View -->
+        <div id="forecast-view" class="view-container">
+            <!-- Forecast Map Panel -->
+            <div class="forecast-map-panel">
+                <div class="panel-header">
+                    <h2>🗺️ Forecast Map</h2>
+                    <div class="instructions-inline">
+                        Visualize future data center impact scenarios
+                    </div>
+                </div>
+                <div id="forecast-map" class="map-container"></div>
+            </div>
+
+            <!-- Simulation Settings Panel -->
+            <div class="simulation-panel">
+                <h2 class="panel-title">⚡ Simulation Settings</h2>
+                <p class="subtitle">Configure forecast parameters</p>
+
+                <!-- Time Horizon -->
+                <div class="section">
+                    <div class="section-title">Time Horizon</div>
+                    <div class="time-grid">
+                        <button class="time-btn active" data-years="5">
+                            <span class="time-value">5</span>
+                            <span class="time-label">Years</span>
+                        </button>
+                        <button class="time-btn" data-years="10">
+                            <span class="time-value">10</span>
+                            <span class="time-label">Years</span>
+                        </button>
+                        <button class="time-btn" data-years="20">
+                            <span class="time-value">20</span>
+                            <span class="time-label">Years</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Growth Scenario -->
+                <div class="section">
+                    <div class="section-title">Growth Scenario</div>
+                    <div class="scenario-grid">
+                        <button class="scenario-btn" data-scenario="conservative">
+                            <span class="scenario-icon">📉</span>
+                            <span class="scenario-name">Conservative</span>
+                            <span class="scenario-desc">5% annual growth</span>
+                        </button>
+                        <button class="scenario-btn active" data-scenario="moderate">
+                            <span class="scenario-icon">📊</span>
+                            <span class="scenario-name">Moderate</span>
+                            <span class="scenario-desc">15% annual growth</span>
+                        </button>
+                        <button class="scenario-btn" data-scenario="aggressive">
+                            <span class="scenario-icon">📈</span>
+                            <span class="scenario-name">Aggressive</span>
+                            <span class="scenario-desc">30% annual growth</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Initial Configuration -->
+                <div class="section">
+                    <div class="section-title">Initial Data Center Size</div>
+                    <div class="preset-grid">
+                        <button class="preset-btn active" data-size="small">
+                            <span class="name">Small</span>
+                            <span class="power">1 MW</span>
+                        </button>
+                        <button class="preset-btn" data-size="medium">
+                            <span class="name">Medium</span>
+                            <span class="power">10 MW</span>
+                        </button>
+                        <button class="preset-btn" data-size="large">
+                            <span class="name">Large</span>
+                            <span class="power">50 MW</span>
+                        </button>
+                        <button class="preset-btn" data-size="mega">
+                            <span class="name">Mega</span>
+                            <span class="power">150 MW</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Environmental Factors -->
+                <div class="section">
+                    <div class="section-title">Environmental Factors</div>
+                    <div class="factor-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked>
+                            <span>Include climate change impact</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked>
+                            <span>Account for grid improvements</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox">
+                            <span>Renewable energy transition</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox">
+                            <span>Water scarcity scenarios</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Forecast Summary -->
+                <div class="forecast-summary">
+                    <div class="section-title">Forecast Summary</div>
+                    <div class="summary-row">
+                        <span>Time Period:</span>
+                        <strong><span id="forecast-years">5</span> years</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Growth Rate:</span>
+                        <strong><span id="forecast-growth">15</span>% annually</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Starting Size:</span>
+                        <strong><span id="forecast-size">1</span> MW</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Projected Final:</span>
+                        <strong><span id="forecast-final">2.0</span> MW</strong>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <button id="run-forecast-btn" class="analyze-btn" onclick="runForecast()">
+                    🔮 Run Forecast
+                </button>
+                <button class="reset-btn" onclick="resetForecast()">
+                    🔄 Reset Forecast
+                </button>
+            </div>
+        </div>
+
+        <!-- About View -->
+        <div id="about-view" class="view-container">
+            <div class="about-content">
+                <h1>About Data Center Impact Analyzer</h1>
+                <p>This tool helps analyze and forecast the environmental and economic impact of data centers.</p>
+            </div>
+        </div>
     </div>
 
     <!-- Application Scripts -->

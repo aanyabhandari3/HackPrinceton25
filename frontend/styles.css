@@ -8,40 +8,184 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     overflow: hidden;
+    background: #f3f4f6;
 }
 
-/* Map Container */
-#map {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 100%;
-}
-
-/* Sidebar */
-.sidebar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 380px;
-    height: 100%;
+/* Navbar */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
     background: white;
-    box-shadow: 2px 0 12px rgba(0,0,0,0.1);
-    z-index: 1;
-    overflow-y: auto;
-    padding: 24px;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    z-index: 100;
 }
 
-.sidebar h1 {
-    font-size: 22px;
-    margin-bottom: 8px;
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.navbar-logo {
+    font-size: 28px;
+}
+
+.navbar-title {
+    font-size: 18px;
     color: #2563eb;
 }
 
-.sidebar .subtitle {
+.navbar-menu {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    justify-content: center;
+}
+
+.navbar-link {
+    padding: 8px 16px;
+    color: #6b7280;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.navbar-link:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+}
+
+.navbar-link.active {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.navbar-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.navbar-btn {
+    padding: 8px 16px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.navbar-btn:hover {
+    background: #1d4ed8;
+}
+
+.navbar-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* Layout Container */
+.layout-container {
+    position: relative;
+    height: calc(100vh - 64px);
+    overflow: hidden;
+}
+
+/* View Containers */
+.view-container {
+    display: none;
+    width: 100%;
+    height: 100%;
+}
+
+.view-container.active {
+    display: flex;
+}
+
+/* Left Panel - Configuration */
+.left-panel {
+    width: 360px;
+    background: white;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+    z-index: 10;
+    overflow-y: auto;
+    padding: 24px;
+    flex-shrink: 0;
+}
+
+/* Center Panel - Map */
+.center-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    min-width: 0;
+}
+
+/* Right Panel - Report */
+.right-panel {
+    width: 400px;
+    background: white;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+    z-index: 10;
+    overflow-y: auto;
+    padding: 24px;
+    flex-shrink: 0;
+}
+
+/* Panel Headers */
+.panel-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.panel-header h2 {
+    font-size: 18px;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.instructions-inline {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 8px;
+}
+
+/* Map Container */
+.map-container {
+    flex: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    border: 2px solid #e5e7eb;
+    background: white;
+}
+
+/* Left Panel Specific */
+.panel-title {
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.left-panel .subtitle {
     font-size: 13px;
-    color: #666;
+    color: #6b7280;
     margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 /* Section Styles */
@@ -231,22 +375,285 @@ body {
     cursor: pointer;
 }
 
-/* Instructions Panel */
-.instructions {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    background: white;
-    padding: 12px 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    z-index: 1;
-    font-size: 14px;
-}
-
 /* Mapbox Popup Customization */
 .mapboxgl-popup-content {
     padding: 15px;
     border-radius: 8px;
+}
+
+/* Report Content */
+.report-content {
+    font-size: 14px;
+    color: #374151;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.empty-state p {
+    margin-bottom: 8px;
+}
+
+.empty-hint {
+    font-size: 12px;
+    color: #d1d5db;
+}
+
+/* Report Sections */
+.report-section {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border-left: 4px solid #2563eb;
+}
+
+.report-section h3 {
+    font-size: 16px;
+    color: #1f2937;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.report-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.report-row:last-child {
+    border-bottom: none;
+}
+
+.report-row .label {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.report-row .value {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 13px;
+}
+
+.report-highlight {
+    background: #dbeafe;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 12px;
+}
+
+.report-highlight strong {
+    color: #1e40af;
+}
+
+/* Loading State */
+.loading-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e5e7eb;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 16px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Forecast View Styles */
+.forecast-map-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    min-width: 0;
+}
+
+.simulation-panel {
+    width: 380px;
+    background: white;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+    z-index: 10;
+    overflow-y: auto;
+    padding: 24px;
+    flex-shrink: 0;
+}
+
+/* Time Horizon Buttons */
+.time-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.time-btn {
+    padding: 16px 12px;
+    border: 2px solid #e5e7eb;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.time-btn:hover {
+    border-color: #2563eb;
+    background: #f0f9ff;
+}
+
+.time-btn.active {
+    border-color: #2563eb;
+    background: #eff6ff;
+}
+
+.time-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.time-btn.active .time-value {
+    color: #2563eb;
+}
+
+.time-label {
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Scenario Buttons */
+.scenario-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.scenario-btn {
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+}
+
+.scenario-btn:hover {
+    border-color: #2563eb;
+    background: #f0f9ff;
+}
+
+.scenario-btn.active {
+    border-color: #2563eb;
+    background: #eff6ff;
+}
+
+.scenario-icon {
+    font-size: 24px;
+}
+
+.scenario-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    display: block;
+}
+
+.scenario-desc {
+    font-size: 11px;
+    color: #6b7280;
+    display: block;
+}
+
+/* Factor Options */
+.factor-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #374151;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Forecast Summary */
+.forecast-summary {
+    background: #f0f9ff;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    margin-bottom: 16px;
+    border: 1px solid #bfdbfe;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.summary-row:last-child {
+    margin-bottom: 0;
+}
+
+/* About View */
+.about-content {
+    max-width: 800px;
+    margin: 60px auto;
+    padding: 40px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.about-content h1 {
+    font-size: 32px;
+    color: #1f2937;
+    margin-bottom: 20px;
+}
+
+.about-content p {
+    font-size: 16px;
+    color: #6b7280;
+    line-height: 1.6;
 }
 
