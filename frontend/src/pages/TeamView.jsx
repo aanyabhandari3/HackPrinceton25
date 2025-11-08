@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { 
-  Users, TrendingUp, AlertTriangle, CheckCircle, Clock, 
-  MessageSquare, Plus, Filter, GitPullRequest, Code, Bug 
-} from 'lucide-react'
+  UserMultiple, ArrowUp, WarningAlt, CheckmarkFilled, Time, 
+  Chat as ChatIcon, Add, Filter, RequestQuote, Code, Debug 
+} from '@carbon/icons-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
 
 const TeamView = () => {
@@ -26,10 +26,10 @@ const TeamView = () => {
   ]
 
   const kpis = [
-    { label: 'Velocity', value: '52', trend: '+8%', status: 'up', icon: TrendingUp },
-    { label: 'Burn Rate', value: '94%', trend: 'On track', status: 'good', icon: CheckCircle },
-    { label: 'Carryover', value: '3', trend: '-2 from last', status: 'good', icon: Clock },
-    { label: 'Incidents', value: '1', trend: 'P2 open', status: 'warning', icon: AlertTriangle }
+    { label: 'Velocity', value: '52', trend: '+8%', status: 'up', icon: ArrowUp },
+    { label: 'Burn Rate', value: '94%', trend: 'On track', status: 'good', icon: CheckmarkFilled },
+    { label: 'Carryover', value: '3', trend: '-2 from last', status: 'good', icon: Time },
+    { label: 'Incidents', value: '1', trend: 'P2 open', status: 'warning', icon: WarningAlt }
   ]
 
   const teamMembers = [
@@ -122,41 +122,47 @@ const TeamView = () => {
           <select 
             value={selectedTeam}
             onChange={(e) => setSelectedTeam(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-semibold"
+            className="px-3 py-2 text-lg font-semibold focus:outline-none"
+            style={{ 
+              backgroundColor: '#f4f4f4',
+              border: '1px solid #8d8d8d',
+              borderBottom: '1px solid #8d8d8d',
+              color: '#161616'
+            }}
           >
             {teams.map(team => (
               <option key={team.id} value={team.id}>{team.name}</option>
             ))}
           </select>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm" style={{ color: '#525252' }}>
             <p>Lead: {currentTeam?.lead} • {currentTeam?.members} members</p>
             <p className="text-xs">Current Focus: {currentTeam?.focus}</p>
           </div>
         </div>
-        <div className="flex items-center space-x-3">
-          <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2">
-            <Filter className="w-4 h-4" />
+        <div className="flex items-center space-x-2">
+          <button className="px-3 py-2 text-sm transition-colors flex items-center space-x-2" style={{ backgroundColor: '#ffffff', border: '1px solid #8d8d8d', color: '#161616' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e0e0e0'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}>
+            <Filter size={16} />
             <span>Filter</span>
           </button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-            <MessageSquare className="w-4 h-4" />
+          <button className="px-3 py-2 text-white text-sm transition-colors flex items-center space-x-2" style={{ backgroundColor: '#0f62fe' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0353e9'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0f62fe'}>
+            <ChatIcon size={16} />
             <span>Ping Team Agent</span>
           </button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div style={{ borderBottom: '1px solid #e0e0e0' }}>
         <nav className="flex space-x-8">
           {['overview', 'members', 'ai-chat', 'backlog'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === tab
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors`}
+              style={{
+                borderBottomColor: activeTab === tab ? '#0f62fe' : 'transparent',
+                color: activeTab === tab ? '#0f62fe' : '#525252'
+              }}
             >
               {tab.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
             </button>
@@ -168,19 +174,18 @@ const TeamView = () => {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {kpis.map((kpi, index) => {
               const Icon = kpi.icon
+              const iconColor = kpi.status === 'warning' ? '#da1e28' : kpi.status === 'good' ? '#24a148' : '#0f62fe'
               return (
-                <div key={index} className="bg-white rounded-xl border border-gray-200 p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">{kpi.label}</p>
-                      <p className="text-3xl font-bold text-gray-900 mt-2">{kpi.value}</p>
-                      <p className="text-xs text-gray-500 mt-2">{kpi.trend}</p>
-                    </div>
-                    <Icon className={`w-8 h-8 ${kpi.status === 'warning' ? 'text-orange-500' : 'text-green-500'}`} />
+                <div key={index} className="p-4 transition-all hover:shadow-md" style={{ backgroundColor: '#ffffff', border: '1px solid #e0e0e0' }}>
+                  <div className="flex items-start justify-between mb-3">
+                    <p className="text-xs font-medium uppercase tracking-wider" style={{ color: '#525252' }}>{kpi.label}</p>
+                    <Icon size={20} style={{ color: iconColor }} />
                   </div>
+                  <p className="text-3xl font-semibold mb-2" style={{ color: '#161616' }}>{kpi.value}</p>
+                  <p className="text-xs" style={{ color: '#525252' }}>{kpi.trend}</p>
                 </div>
               )
             })}
