@@ -1,0 +1,13 @@
+{
+	"dependencies": {
+		"@ai-sdk/openai": "^2.0.64",
+		"@ai-sdk/xai": "^2.0.31",
+		"@composio/core": "^0.2.3",
+		"@composio/vercel": "^0.2.15",
+		"ai": "^5.0.89",
+		"dotenv": "^17.2.3"
+	},
+	"devDependencies": {
+		"@types/node": "^24.10.0"
+	}
+}
