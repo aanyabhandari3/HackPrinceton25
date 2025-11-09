@@ -1,0 +1,24 @@
+# test_api_keys.py
+import os
+from dotenv import load_dotenv
+
+# Load the config
+load_dotenv("backend/config.env")
+
+# Check what's loaded
+print("Environment variables loaded:")
+print(f"AIRNOW_API_KEY: {os.getenv('AIRNOW_API_KEY', 'NOT FOUND')}")
+print(f"CENSUS_API_KEY: {os.getenv('CENSUS_API_KEY', 'NOT FOUND')}")
+
+# Test environment variables directly
+print("\nEnvironment variables:")
+airnow_key = os.getenv('AIRNOW_API_KEY', 'NOT FOUND')
+census_key = os.getenv('CENSUS_API_KEY', 'NOT FOUND')
+print(f"AIRNOW_API_KEY: {airnow_key}")
+print(f"CENSUS_API_KEY: {census_key}")
+
+# Test if key is valid format (should be alphanumeric)
+if airnow_key and airnow_key != 'NOT FOUND':
+    print(f"\nAPI key length: {len(airnow_key)}")
+    print(f"First 4 chars: {airnow_key[:4]}")
+    print(f"Last 4 chars: {airnow_key[-4:]}")
