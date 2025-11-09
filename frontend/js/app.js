@@ -12,7 +12,7 @@ class DataCenterApp {
     }
 
     initialize() {
-        console.log('🌐 Initializing Data Center Impact Analyzer...');
+        console.log('Initializing Data Center Impact Analyzer...');
 
         // Initialize map
         this.mapManager.initialize('map');
@@ -23,7 +23,7 @@ class DataCenterApp {
         // Setup event handlers
         this.setupEventHandlers();
 
-        console.log('✅ Application initialized successfully!');
+        console.log('Application initialized successfully!');
     }
 
     setupEventHandlers() {
