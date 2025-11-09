@@ -91,6 +91,26 @@ Powered by Claude (Anthropic), the app generates detailed analysis including:
 - **Axios** for API communication
 - **React Markdown** for formatted AI reports
 
+## 💧 Water Usage Calculation (Technical Detail)
+
+**Formula:** `water_gallons = cooling_power_kw × factor × temp_multiplier`
+
+| Cooling Type | Factor (gal/kWh) | Why? |
+|--------------|------------------|------|
+| **Air-Cooled** | 0.2 | Minimal - uses air, not water evaporation |
+| **Water-Cooled** | 1.8 | Highest - cooling towers evaporate + blowdown losses |
+| **Evaporative** | 1.0 | Moderate - direct evaporation, no blowdown |
+| **Liquid** | 0.3 | Low - closed loop, only heat rejection uses water |
+
+**Temperature Adjustment:** +2% water use per °F above 70°F (hotter = more evaporation needed)
+
+**Example:** 1 MW water-cooled DC at 90°F:
+- Cooling load: 250 kW (PUE 1.25)
+- Temp multiplier: 1.4 (90-70=20°F × 0.02)
+- Daily water: 250 × 1.8 × 1.4 × 24 = **15,120 gallons/day**
+
+*Factors based on thermodynamics (heat of vaporization) + industry benchmarks (Google, Microsoft, ASHRAE)*
+
 ## 📡 APIs Used
 
 | API | Purpose | Free Tier |

@@ -1,4 +1,4 @@
-from services import ServerPowerModel, WorkloadSimulator
+from services import ServerPowerModel, WorkloadSimulator, CoolingEfficiencyModel
 from matplotlib import pyplot as plt
 import numpy as np
 
