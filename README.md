@@ -1,5 +1,4 @@
-# EVOLV
-Dive Deep. See Clear.
+# EVOLV - *Dive Deep. See Clear.*
 
 Analyze the environmental and economic impact of data centers across the United States. Place a data center anywhere on the map, customize its specifications, and receive detailed AI-powered impact reports.
 
