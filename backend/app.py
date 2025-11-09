@@ -462,7 +462,7 @@ Be specific, data-driven, and balanced (mention both concerns and benefits)."""
     try:
         message = client.messages.create(
             model="claude-sonnet-4-5-20250929",
-            max_tokens=2000,
+            max_tokens=8192,
             messages=[{
                 "role": "user",
                 "content": prompt
@@ -550,7 +550,7 @@ Be specific, data-driven, and balanced. Use the actual simulation data to suppor
     try:
         message = client.messages.create(
             model="claude-sonnet-4-5-20250929",
-            max_tokens=2500,
+            max_tokens=8192,
             messages=[{
                 "role": "user",
                 "content": prompt
@@ -681,6 +681,171 @@ def analyze_datacenter():
     except Exception as e:
         print(f"Error in analyze endpoint: {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analyze/stream', methods=['POST'])
+def stream_analyze_datacenter():
+    """Analyze with real-time streaming updates"""
+    
+    # Extract ALL request data BEFORE generator
+    data = request.json
+    lat = data['latitude']
+    lon = data['longitude']
+    dc_size = data.get('size', 'medium')
+    
+    # Custom configuration if provided
+    if 'custom' in data and data['custom']:
+        datacenter_config = {
+            'name': data.get('name', 'Custom Data Center'),
+            'power_mw': data.get('power_mw', 10),
+            'servers': data.get('servers', 1000),
+            'square_feet': data.get('square_feet', 50000),
+            'water_gallons_per_day': data.get('water_gallons_per_day', 300000),
+            'employees': data.get('employees', 50)
+        }
+    else:
+        datacenter_config = DATA_CENTER_TIERS.get(dc_size, DATA_CENTER_TIERS['medium'])
+    
+    def generate():
+        try:
+            # Step 1: Initial status
+            yield f"data: {json.dumps({'status': 'started', 'step': 'initializing'})}\n\n"
+            
+            # Step 2: Gather location data
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'fetching_location_data'})}\n\n"
+            location_data = get_population_data(lat, lon)
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'location_data_complete', 'data': location_data})}\n\n"
+            
+            # Step 3: Get energy data
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'fetching_energy_data'})}\n\n"
+            state_code = location_data.get('state_fips', 'US')
+            energy_data = get_energy_data(state_code)
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'energy_data_complete', 'data': energy_data})}\n\n"
+            
+            # Step 4: Get climate data
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'fetching_climate_data'})}\n\n"
+            climate_data = get_climate_data(lat, lon)
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'climate_data_complete', 'data': climate_data})}\n\n"
+            
+            # Step 5: Calculate impacts
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'calculating_impacts'})}\n\n"
+            impact_data = calculate_impact(datacenter_config, location_data, energy_data, climate_data)
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'impacts_complete', 'data': impact_data})}\n\n"
+            
+            # Step 6: Generate LLM analysis with streaming
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'generating_analysis'})}\n\n"
+            
+            # Build prompt
+            prompt = f"""You are an environmental impact analyst for data centers. Analyze the following data center proposal:
+
+DATA CENTER SPECIFICATIONS:
+- Type: {datacenter_config['name']}
+- Power Consumption: {datacenter_config['power_mw']} MW
+- Number of Servers: {datacenter_config['servers']}
+- Size: {datacenter_config['square_feet']:,} square feet
+- Daily Water Usage: {datacenter_config['water_gallons_per_day']:,} gallons
+- Employees: {datacenter_config['employees']}
+
+LOCATION DATA:
+- Coordinates: {lat}, {lon}
+- Location: {location_data.get('location_name', 'Unknown')}
+- Population: {location_data.get('population', 0):,}
+- Median Income: ${location_data.get('median_income', 0):,}
+
+ENERGY DATA:
+- Local Electricity Rate: ${energy_data['price_per_kwh']:.3f} per kWh
+- State: {energy_data.get('state', 'Unknown')}
+
+CLIMATE DATA:
+- Temperature: {climate_data['temperature']}°F
+- Humidity: {climate_data['humidity']}%
+- Conditions: {climate_data['description']}
+
+CALCULATED IMPACTS:
+Energy Impact:
+- Annual Energy Use: {impact_data['energy']['annual_mwh']:,.0f} MWh
+- Annual Energy Cost: ${impact_data['energy']['annual_cost']:,.0f}
+- Increase in Regional Energy Demand: {impact_data['energy']['percent_increase']:.2f}%
+- Additional Cost Per Household: ${impact_data['energy']['cost_per_household_annually']:.2f}/year
+
+Carbon Impact:
+- Annual CO2 Emissions: {impact_data['carbon']['annual_tons_co2']:,.0f} tons
+- Equivalent to {impact_data['carbon']['equivalent_cars']:,.0f} cars
+- Equivalent to power for {impact_data['carbon']['equivalent_homes']:,.0f} homes
+
+Water Impact:
+- Daily Water Usage: {impact_data['water']['daily_gallons']:,} gallons
+- Annual Water Usage: {impact_data['water']['annual_gallons']:,} gallons
+- Increase in Regional Water Demand: {impact_data['water']['percent_increase']:.2f}%
+- Equivalent to {impact_data['water']['olympic_pools_per_year']:.1f} Olympic pools per year
+
+Economic Impact:
+- Jobs Created: {impact_data['economic']['jobs_created']}
+- Estimated Construction Cost: ${impact_data['economic']['estimated_construction_cost']:,.0f}
+- Annual Operating Cost: ${impact_data['economic']['annual_operating_cost']:,.0f}
+
+Please provide a comprehensive analysis covering:
+1. **Overall Environmental Impact** - Summary of environmental concerns
+2. **Energy Infrastructure** - Can the local grid handle this? Any concerns?
+3. **Water Resources** - Impact on local water supply, thermal pollution concerns
+4. **Community Impact** - Effects on residents (bills, health, quality of life)
+5. **Climate Considerations** - How local climate affects efficiency and cooling needs
+6. **Recommendations** - Mitigation strategies and whether this location is suitable
+7. **Regulatory Considerations** - Potential legal/permitting challenges
+
+Be specific, data-driven, and balanced (mention both concerns and benefits)."""
+
+            # Stream the LLM response
+            llm_analysis_chunks = []
+            try:
+                with client.messages.stream(
+                    model="claude-sonnet-4-5-20250929",
+                    max_tokens=8192,
+                    messages=[{"role": "user", "content": prompt}]
+                ) as stream:
+                    for text in stream.text_stream:
+                        llm_analysis_chunks.append(text)
+                        # Send each chunk as it arrives
+                        yield f"data: {json.dumps({'status': 'analysis_chunk', 'text': text})}\n\n"
+                
+                # Combine all chunks for final report
+                llm_analysis = ''.join(llm_analysis_chunks)
+                
+            except Exception as e:
+                llm_analysis = f"Error generating LLM analysis: {e}"
+                yield f"data: {json.dumps({'status': 'analysis_error', 'message': str(e)})}\n\n"
+            
+            # Step 7: Compile final report
+            report = {
+                'timestamp': datetime.utcnow().isoformat(),
+                'location': {
+                    'latitude': lat,
+                    'longitude': lon,
+                    'name': location_data.get('location_name', 'Unknown'),
+                    'population': location_data.get('population', 0),
+                    'median_income': location_data.get('median_income', 0)
+                },
+                'datacenter': datacenter_config,
+                'climate': climate_data,
+                'energy_pricing': energy_data,
+                'impact': impact_data,
+                'analysis': llm_analysis
+            }
+            
+            # Step 8: Send final complete report
+            yield f"data: {json.dumps({'status': 'complete', 'report': report})}\n\n"
+            
+        except Exception as e:
+            import traceback
+            error_detail = traceback.format_exc()
+            print(f"Stream error: {error_detail}")
+            yield f"data: {json.dumps({'status': 'error', 'message': str(e)})}\n\n"
+    
+    # Return streaming response
+    response = Response(stream_with_context(generate()), mimetype='text/event-stream')
+    response.headers['Cache-Control'] = 'no-cache'
+    response.headers['X-Accel-Buffering'] = 'no'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 @app.route('/api/forecast', methods=['POST'])
 def forecast_datacenter():
@@ -1062,7 +1227,7 @@ Be specific, data-driven, and balanced. Use the actual simulation data to suppor
             try:
                 with client.messages.stream(
                     model="claude-sonnet-4-5-20250929",
-                    max_tokens=2500,
+                    max_tokens=8192,
                     messages=[{"role": "user", "content": prompt}]
                 ) as stream:
                     for text in stream.text_stream:
