@@ -4,7 +4,16 @@ import os
 from dotenv import load_dotenv
 import anthropic
 import requests
+import numpy as np
 from datetime import datetime
+from services.simulate import (
+    run_full_simulation,
+    create_climate_data_from_api,
+    create_datacenter_specs_from_config,
+    create_grid_info_from_location,
+    PowerSimulationResult,
+    GridImpactCalculator
+)
 
 load_dotenv()
 
@@ -28,7 +37,10 @@ DATA_CENTER_TIERS = {
         'servers': 100,
         'square_feet': 5000,
         'water_gallons_per_day': 25000,
-        'employees': 10
+        'employees': 10,
+        'cooling_type': 'air_cooled',        # For CoolingEfficiencyModel
+        'server_type': 'enterprise',         # For ServerPowerModel
+        'datacenter_type': 'enterprise'      # For WorkloadSimulator
     },
     'medium': {
         'name': 'Medium Enterprise Data Center',
@@ -36,7 +48,10 @@ DATA_CENTER_TIERS = {
         'servers': 1000,
         'square_feet': 50000,
         'water_gallons_per_day': 300000,
-        'employees': 50
+        'employees': 50,
+        'cooling_type': 'air_cooled',
+        'server_type': 'enterprise',
+        'datacenter_type': 'enterprise'
     },
     'large': {
         'name': 'Large Hyperscale Data Center',
@@ -44,7 +59,10 @@ DATA_CENTER_TIERS = {
         'servers': 10000,
         'square_feet': 250000,
         'water_gallons_per_day': 1500000,
-        'employees': 200
+        'employees': 200,
+        'cooling_type': 'water_cooled',      # Larger facilities often use water cooling
+        'server_type': 'enterprise',
+        'datacenter_type': 'cloud_compute'   # Hyperscale typically runs cloud services
     },
     'mega': {
         'name': 'Mega Hyperscale Data Center',
@@ -52,9 +70,135 @@ DATA_CENTER_TIERS = {
         'servers': 50000,
         'square_feet': 750000,
         'water_gallons_per_day': 5000000,
-        'employees': 500
+        'employees': 500,
+        'cooling_type': 'liquid_cooling',    # Most efficient for massive scale
+        'server_type': 'nvidia_h100',        # Mega centers often have AI/GPU compute
+        'datacenter_type': 'ai_training'     # High utilization AI training workload
     }
 }
+
+# New 
+def map_state_to_grid_region(state_fips: str) -> str:
+   
+    
+    # Comprehensive mapping of all 50 states + DC to grid regions
+    state_to_grid = {
+        # CAISO - California Independent System Operator
+        '06': 'CAISO',  # California
+        
+        # ERCOT - Texas (isolated grid)
+        '48': 'ERCOT',  # Texas
+        
+        # PJM - Mid-Atlantic and parts of Midwest
+        '10': 'PJM',    # Delaware
+        '11': 'PJM',    # District of Columbia
+        '17': 'PJM',    # Illinois (northern/eastern parts)
+        '18': 'PJM',    # Indiana (parts)
+        '21': 'PJM',    # Kentucky (eastern)
+        '24': 'PJM',    # Maryland
+        '26': 'PJM',    # Michigan (parts)
+        '34': 'PJM',    # New Jersey
+        '37': 'PJM',    # North Carolina (northern)
+        '39': 'PJM',    # Ohio
+        '42': 'PJM',    # Pennsylvania
+        '47': 'PJM',    # Tennessee (eastern)
+        '51': 'PJM',    # Virginia
+        '54': 'PJM',    # West Virginia
+        
+        # NYISO - New York
+        '36': 'NYISO',  # New York
+        
+        # SPP - Southwest Power Pool (Central/Plains states)
+        '20': 'SPP',    # Kansas
+        '31': 'SPP',    # Nebraska
+        '38': 'SPP',    # North Dakota
+        '40': 'SPP',    # Oklahoma
+        '46': 'SPP',    # South Dakota
+        '29': 'SPP',    # Missouri (western)
+        '19': 'SPP',    # Iowa (parts)
+        '27': 'SPP',    # Minnesota (parts)
+        '05': 'SPP',    # Arkansas (western)
+        '22': 'SPP',    # Louisiana (parts)
+        '28': 'SPP',    # Mississippi (parts)
+        
+        # ISONE - ISO New England
+        '09': 'ISONE',  # Connecticut
+        '23': 'ISONE',  # Maine
+        '25': 'ISONE',  # Massachusetts
+        '33': 'ISONE',  # New Hampshire
+        '44': 'ISONE',  # Rhode Island
+        '50': 'ISONE',  # Vermont
+        
+        # MISO - Midcontinent Independent System Operator
+        '55': 'MISO',   # Wisconsin
+        '27': 'MISO',   # Minnesota (override SPP for primary coverage)
+        '19': 'MISO',   # Iowa (override SPP for primary coverage)
+        '17': 'MISO',   # Illinois (parts not in PJM)
+        '18': 'MISO',   # Indiana (parts not in PJM)
+        '26': 'MISO',   # Michigan (parts not in PJM)
+        '29': 'MISO',   # Missouri (eastern)
+        '05': 'MISO',   # Arkansas (eastern)
+        '22': 'MISO',   # Louisiana (parts)
+        
+        # SERC - Southeast (non-ISO regulated utilities)
+        '12': 'SERC',   # Florida
+        '13': 'SERC',   # Georgia
+        '01': 'SERC',   # Alabama
+        '45': 'SERC',   # South Carolina
+        '37': 'SERC',   # North Carolina (southern - override PJM)
+        '28': 'SERC',   # Mississippi (eastern - override)
+        '47': 'SERC',   # Tennessee (western - override)
+        
+        # PACNW - Pacific Northwest
+        '53': 'PACNW',  # Washington
+        '41': 'PACNW',  # Oregon
+        '16': 'PACNW',  # Idaho
+        '30': 'PACNW',  # Montana (western)
+        
+        # WEST - Southwest/Mountain West (WECC non-CAISO)
+        '04': 'WEST',   # Arizona
+        '32': 'WEST',   # Nevada
+        '49': 'WEST',   # Utah
+        '08': 'WEST',   # Colorado
+        '35': 'WEST',   # New Mexico
+        '56': 'WEST',   # Wyoming
+        '30': 'WEST',   # Montana (eastern - override)
+        
+        # Alaska and Hawaii - Use DEFAULT (isolated grids)
+        '02': 'DEFAULT', # Alaska
+        '15': 'DEFAULT', # Hawaii
+    }
+    
+    # Return mapped region or DEFAULT if not found
+    region = state_to_grid.get(state_fips, 'DEFAULT')
+    
+    # Log the mapping for debugging
+    print(f"Mapped state FIPS '{state_fips}' to grid region '{region}'")
+    
+    return region
+
+# New
+def get_state_name_from_fips(state_fips: str) -> str:
+    """
+    Helper function to convert FIPS code to state name for debugging.
+    Optional - useful for logging.
+    """
+    fips_to_state = {
+        '01': 'Alabama', '02': 'Alaska', '04': 'Arizona', '05': 'Arkansas',
+        '06': 'California', '08': 'Colorado', '09': 'Connecticut', '10': 'Delaware',
+        '11': 'District of Columbia', '12': 'Florida', '13': 'Georgia', '15': 'Hawaii',
+        '16': 'Idaho', '17': 'Illinois', '18': 'Indiana', '19': 'Iowa',
+        '20': 'Kansas', '21': 'Kentucky', '22': 'Louisiana', '23': 'Maine',
+        '24': 'Maryland', '25': 'Massachusetts', '26': 'Michigan', '27': 'Minnesota',
+        '28': 'Mississippi', '29': 'Missouri', '30': 'Montana', '31': 'Nebraska',
+        '32': 'Nevada', '33': 'New Hampshire', '34': 'New Jersey', '35': 'New Mexico',
+        '36': 'New York', '37': 'North Carolina', '38': 'North Dakota', '39': 'Ohio',
+        '40': 'Oklahoma', '41': 'Oregon', '42': 'Pennsylvania', '44': 'Rhode Island',
+        '45': 'South Carolina', '46': 'South Dakota', '47': 'Tennessee', '48': 'Texas',
+        '49': 'Utah', '50': 'Vermont', '51': 'Virginia', '53': 'Washington',
+        '54': 'West Virginia', '55': 'Wisconsin', '56': 'Wyoming'
+    }
+    return fips_to_state.get(state_fips, 'Unknown')
 
 def get_population_data(lat, lon, radius_miles=10):
     """Get population data from US Census API"""
@@ -326,6 +470,57 @@ Be specific, data-driven, and balanced (mention both concerns and benefits)."""
         print(f"Error generating LLM analysis: {e}")
         return "Error generating analysis. Please check API configuration."
 
+
+# New
+def calculate_impact_with_simulation(datacenter_config, location_data, energy_data, climate_data):
+    """Calculate impact using the sophisticated simulation models"""
+    
+    # Determine grid region based on location
+    state_fips = location_data.get('state_fips', '')
+    region_code = map_state_to_grid_region(state_fips)  # You'll need to create this
+    
+    # Convert API data to simulation inputs
+    dc_specs = create_datacenter_specs_from_config(datacenter_config)
+    climate = create_climate_data_from_api(climate_data)
+    grid_info = create_grid_info_from_location(location_data, region_code)
+    
+    # Run simulation
+    sim_result = run_full_simulation(dc_specs, climate, grid_info)
+    
+    # Convert simulation results to the format expected by frontend
+    annual_kwh = sim_result.annual_consumption_mwh * 1000
+    annual_cost = annual_kwh * energy_data['price_per_kwh']
+    
+    # Calculate carbon using grid-specific carbon intensity
+    grid_calculator = GridImpactCalculator()
+    grid_config = grid_calculator.grid_regions.get(region_code, grid_calculator.grid_regions['DEFAULT'])
+    annual_co2_kg = annual_kwh * grid_config['carbon_intensity']
+    annual_co2_tons = annual_co2_kg / 907.185  # kg to US tons
+    
+    return {
+        'energy': {
+            'annual_mwh': sim_result.annual_consumption_mwh,
+            'annual_kwh': annual_kwh,
+            'annual_cost': annual_cost,
+            'peak_power_kw': sim_result.peak_power_kw,
+            'average_power_kw': sim_result.average_power_kw,
+            'average_pue': np.mean(sim_result.hourly_pue),
+            'percent_increase': sim_result.community_impact['average_impact_percent']
+        },
+        'carbon': {
+            'annual_tons_co2': annual_co2_tons,
+            'carbon_intensity': grid_config['carbon_intensity'],
+            'equivalent_cars': annual_co2_tons / 4.6,
+            'equivalent_homes': annual_kwh / 10000
+        },
+        'grid_impact': sim_result.community_impact,
+        'simulation': {
+            'hourly_data_available': True,
+            'hours_simulated': len(sim_result.hourly_power_kw)
+        }
+    }
+
+
 @app.route('/api/analyze', methods=['POST'])
 def analyze_datacenter():
     """Main endpoint to analyze data center impact"""
@@ -396,6 +591,141 @@ def analyze_datacenter():
     except Exception as e:
         print(f"Error in analyze endpoint: {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/forecast', methods=['POST'])
+def forecast_datacenter():
+    """Forecast a data center with detailed simulation"""
+    try:
+        data = request.json
+        
+        # Extract parameters
+        lat = data['latitude']
+        lon = data['longitude']
+        dc_size = data.get('size', 'medium')
+        simulation_hours = data.get('simulation_hours', 8760)  # Default: 1 year
+        
+        # Custom configuration if provided
+        if 'custom' in data and data['custom']:
+            datacenter_config = {
+                'name': data.get('name', 'Custom Data Center'),
+                'power_mw': data.get('power_mw', 10),
+                'servers': data.get('servers', 1000),
+                'square_feet': data.get('square_feet', 50000),
+                'water_gallons_per_day': data.get('water_gallons_per_day', 300000),
+                'employees': data.get('employees', 50),
+                'cooling_type': data.get('cooling_type', 'air_cooled'),
+                'server_type': data.get('server_type', 'enterprise'),
+                'datacenter_type': data.get('datacenter_type', 'enterprise')
+            }
+        else:
+            datacenter_config = DATA_CENTER_TIERS.get(dc_size, DATA_CENTER_TIERS['medium'])
+        
+        # Gather data from various APIs
+        print(f"Forecasting data center for location: {lat}, {lon}")
+        location_data = get_population_data(lat, lon)
+        
+        # Get state code and map to grid region
+        state_fips = location_data.get('state_fips', '')
+        state_name = get_state_name_from_fips(state_fips)
+        region_code = map_state_to_grid_region(state_fips)
+        
+        energy_data = get_energy_data(state_fips)
+        climate_data = get_climate_data(lat, lon)
+        
+        # Convert API data to simulation inputs
+        dc_specs = create_datacenter_specs_from_config(datacenter_config)
+        climate = create_climate_data_from_api(climate_data)
+        grid_info = create_grid_info_from_location(location_data, region_code)
+        
+        # Run full simulation
+        print(f"Running simulation for {simulation_hours} hours...")
+        sim_result = run_full_simulation(dc_specs, climate, grid_info, simulation_hours)
+        
+        # Calculate costs using grid-specific data
+        grid_calculator = GridImpactCalculator()
+        grid_config = grid_calculator.grid_regions.get(region_code, grid_calculator.grid_regions['DEFAULT'])
+        
+        annual_kwh = sim_result.annual_consumption_mwh * 1000
+        annual_cost = annual_kwh * grid_config['base_rate']
+        
+        # Calculate carbon using grid-specific carbon intensity
+        annual_co2_kg = annual_kwh * grid_config['carbon_intensity']
+        annual_co2_tons = annual_co2_kg / 907.185  # kg to US tons
+        
+        # Sample hourly data for frontend (every 24th hour to reduce payload size)
+        sampled_hours = list(range(0, len(sim_result.hourly_power_kw), 24))
+        sampled_power = [sim_result.hourly_power_kw[i] for i in sampled_hours]
+        sampled_utilization = [sim_result.hourly_utilization[i] for i in sampled_hours]
+        sampled_pue = [sim_result.hourly_pue[i] for i in sampled_hours]
+        
+        # Compile forecast report
+        forecast_report = {
+            'timestamp': datetime.utcnow().isoformat(),
+            'location': {
+                'latitude': lat,
+                'longitude': lon,
+                'name': location_data.get('location_name', 'Unknown'),
+                'state': state_name,
+                'state_fips': state_fips,
+                'grid_region': region_code,
+                'population': location_data.get('population', 0),
+                'median_income': location_data.get('median_income', 0)
+            },
+            'datacenter': datacenter_config,
+            'climate': climate_data,
+            'simulation': {
+                'hours_simulated': simulation_hours,
+                'peak_power_kw': sim_result.peak_power_kw,
+                'average_power_kw': sim_result.average_power_kw,
+                'annual_consumption_mwh': sim_result.annual_consumption_mwh,
+                'average_utilization': float(np.mean(sim_result.hourly_utilization)),
+                'peak_utilization': float(max(sim_result.hourly_utilization)),
+                'average_pue': float(np.mean(sim_result.hourly_pue)),
+                'best_pue': float(min(sim_result.hourly_pue)),
+                'worst_pue': float(max(sim_result.hourly_pue)),
+                'hourly_data': {
+                    'hours': sampled_hours,
+                    'power_kw': sampled_power,
+                    'utilization': sampled_utilization,
+                    'pue': sampled_pue
+                }
+            },
+            'energy': {
+                'annual_mwh': sim_result.annual_consumption_mwh,
+                'annual_kwh': annual_kwh,
+                'annual_cost': annual_cost,
+                'grid_region': region_code,
+                'base_rate': grid_config['base_rate'],
+                'peak_multiplier': grid_config['peak_multiplier'],
+                'percent_increase': sim_result.community_impact['average_impact_percent']
+            },
+            'carbon': {
+                'annual_tons_co2': annual_co2_tons,
+                'carbon_intensity_kg_kwh': grid_config['carbon_intensity'],
+                'equivalent_cars': annual_co2_tons / 4.6,
+                'equivalent_homes': annual_kwh / 10000
+            },
+            'community_impact': {
+                'peak_impact_percent': sim_result.community_impact['peak_impact_percent'],
+                'average_impact_percent': sim_result.community_impact['average_impact_percent'],
+                'stability_risk': sim_result.community_impact['stability_risk'],
+                'grid_classification': sim_result.community_impact['grid_classification'],
+                'household_impact': sim_result.community_impact['household_impact'],
+                'infrastructure_cost': sim_result.community_impact['infrastructure_cost']
+            }
+        }
+        
+        return jsonify(forecast_report)
+        
+    except KeyError as e:
+        print(f"Missing required parameter in forecast endpoint: {e}")
+        return jsonify({'error': f'Missing required parameter: {str(e)}'}), 400
+    except Exception as e:
+        print(f"Error in forecast endpoint: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/datacenter-types', methods=['GET'])
 def get_datacenter_types():

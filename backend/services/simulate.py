@@ -533,3 +533,122 @@ class GridImpactCalculator:
             return "high"
         else:
             return "critical"
+
+
+
+
+
+
+def run_full_simulation(
+    datacenter_specs: DataCenterSpecs,
+    climate_data: ClimateData,
+    grid_info: GridInfo,
+    simulation_hours: int = 8760  # 1 year
+) -> PowerSimulationResult:
+  
+    # Initialize models
+    server_model = ServerPowerModel(server_type=datacenter_specs.server_type)
+    workload_sim = WorkloadSimulator()
+    cooling_model = CoolingEfficiencyModel(cooling_type=datacenter_specs.cooling_type)
+    grid_calculator = GridImpactCalculator()
+    
+    # Simulate hourly data
+    hourly_power_kw = []
+    hourly_utilization = []
+    hourly_pue = []
+    
+    start_date = datetime.now()
+    
+    for hour in range(simulation_hours):
+        current_time = start_date + timedelta(hours=hour)
+        day_of_week = current_time.weekday()
+        month = current_time.month
+        hour_of_day = current_time.hour
+        
+        # Get utilization for this hour
+        utilization = workload_sim.simulate_utilization(
+            hour_of_day, day_of_week, datacenter_specs.datacenter_type, month
+        )
+        
+        # Calculate power consumption (optimized - calculate once, multiply by server count)
+        power_per_server_w = server_model.get_power_consumption(
+            datacenter_specs.max_power_per_server, utilization
+        )
+        total_power_w = power_per_server_w * datacenter_specs.server_count
+        
+        # Calculate PUE (cooling efficiency)
+        pue = cooling_model.calculate_pue(climate_data)
+        
+        # Total power including cooling
+        total_power_kw = (total_power_w / 1000) * pue
+        
+        hourly_power_kw.append(total_power_kw)
+        hourly_utilization.append(utilization)
+        hourly_pue.append(pue)
+    
+    # Calculate grid impact
+    community_impact = grid_calculator.calculate_grid_impact(
+        hourly_power_kw, grid_info
+    )
+    
+    # Compile results
+    return PowerSimulationResult(
+        hourly_power_kw=hourly_power_kw,
+        hourly_utilization=hourly_utilization,
+        hourly_pue=hourly_pue,
+        peak_power_kw=max(hourly_power_kw),
+        average_power_kw=np.mean(hourly_power_kw),
+        annual_consumption_mwh=sum(hourly_power_kw) / 1000,
+        community_impact=community_impact
+    )
+
+def create_climate_data_from_api(weather_data: dict) -> ClimateData:
+    """Convert OpenWeatherMap data to ClimateData"""
+    temp_f = weather_data.get('temperature', 70)
+    humidity = weather_data.get('humidity', 50)
+    
+    # Estimate wet bulb temp (simplified formula)
+    wet_bulb = temp_f * math.atan(0.151977 * math.sqrt(humidity + 8.313659)) + \
+               math.atan(temp_f + humidity) - math.atan(humidity - 1.676331) + \
+               0.00391838 * (humidity ** 1.5) * math.atan(0.023101 * humidity) - 4.686035
+    
+    return ClimateData(
+        dry_bulb_temp=temp_f,
+        wet_bulb_temp=wet_bulb,
+        humidity=humidity,
+        wind_speed=weather_data.get('wind_speed', 5),
+        solar_irradiance=weather_data.get('solar_irradiance', 0)
+    )
+
+def create_datacenter_specs_from_config(config: dict) -> DataCenterSpecs:
+    """Convert app.py config to DataCenterSpecs"""
+    servers = config.get('servers', 1000)
+    power_mw = config.get('power_mw', 10)
+    
+    # Calculate max power per server
+    total_power_w = power_mw * 1_000_000
+    max_power_per_server = total_power_w / servers if servers > 0 else 500
+    
+    return DataCenterSpecs(
+        server_count=servers,
+        max_power_per_server=max_power_per_server,
+        facility_size_sqft=config.get('square_feet', 50000),
+        cooling_type=config.get('cooling_type', 'air_cooled'),
+        server_type=config.get('server_type', 'enterprise'),
+        datacenter_type=config.get('datacenter_type', 'enterprise')
+    )
+
+def create_grid_info_from_location(location_data: dict, region_code: str = "DEFAULT") -> GridInfo:
+    """Convert location data to GridInfo"""
+    population = location_data.get('population', 100000)
+    households = int(population / 2.5)
+    
+    # Estimate baseline demand (rough: 1-2 kW avg per household)
+    baseline_demand_mw = (households * 1.5) / 1000
+    
+    return GridInfo(
+        region_code=region_code,
+        baseline_demand_mw=baseline_demand_mw,
+        total_households=households,
+        average_household_bill=120.0
+    )
