@@ -2,6 +2,7 @@
 // Implements a circular heatmap overlay showing ~5 mile radius impact zone
 
 import { MAPBOX_CONFIG } from './config.js';
+import { stateManager } from './state.js';
 
 class ForecastMap {
     constructor() {
@@ -41,6 +42,9 @@ class ForecastMap {
         this.map.on('load', () => {
             console.log('Forecast map loaded successfully! ✅');
             this.setupHeatmapLayer();
+            
+            // Load cached state and auto-place marker if available
+            this.loadCachedState();
         });
 
         // Add click handler
@@ -302,6 +306,82 @@ class ForecastMap {
         const impactElement = document.getElementById('impact-level');
         if (impactElement) {
             impactElement.textContent = level;
+        }
+    }
+
+    /**
+     * Load cached state from previous analysis and auto-place marker
+     */
+    loadCachedState() {
+        const cacheInfo = stateManager.getCacheInfo();
+        
+        if (!cacheInfo) {
+            console.log('No cached location data found');
+            return;
+        }
+
+        const { location, config, age } = cacheInfo;
+        
+        console.log('📍 Loading cached location:', location);
+        console.log('⚙️ Cached config:', config);
+        console.log('🕒 Cache age:', age);
+
+        // Automatically place marker at cached location
+        this.selectedLocation = location;
+        this.currentMarker = this.createMarker(location.lng, location.lat);
+        this.generateCircularHeatmap(location.lng, location.lat, 5);
+
+        // Fly to the cached location
+        this.map.flyTo({
+            center: [location.lng, location.lat],
+            zoom: 9,
+            duration: 2000
+        });
+
+        // Update impact level
+        this.updateImpactLevel('High');
+
+        // Show cache info notification
+        this.showCacheNotification(location, config, age);
+    }
+
+    /**
+     * Show notification that cached data is being used
+     */
+    showCacheNotification(location, config, age) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'cache-notification';
+        notification.innerHTML = `
+            <div class="cache-notification-content">
+                <h4>📍 Using Cached Analysis Location</h4>
+                <p class="cache-coords">
+                    Lat: ${location.lat.toFixed(4)}, Lng: ${location.lng.toFixed(4)}
+                </p>
+                <p class="cache-config">
+                    ${config.power_mw} MW • ${config.servers.toLocaleString()} servers
+                </p>
+                <p class="cache-time">Cached ${age}</p>
+            </div>
+        `;
+
+        // Add to sidebar
+        const sidebar = document.querySelector('.left-sidebar');
+        if (sidebar) {
+            // Remove any existing notification
+            const existing = sidebar.querySelector('.cache-notification');
+            if (existing) {
+                existing.remove();
+            }
+            
+            // Insert at the top of the sidebar
+            sidebar.insertBefore(notification, sidebar.firstChild);
+
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.5s ease';
+                setTimeout(() => notification.remove(), 500);
+            }, 10000);
         }
     }
 

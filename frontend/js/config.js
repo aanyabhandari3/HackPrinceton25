@@ -48,7 +48,7 @@ export const DATA_CENTER_TYPES = {
 export const API_CONFIG = {
     baseUrl: 'http://127.0.0.1:5000',
     endpoints: {
-        analyze: '/api/analyze',
+        analyze: '/api/analyze/stream',
         dataCenterTypes: '/api/datacenter-types'
     }
 };

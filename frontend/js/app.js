@@ -3,6 +3,7 @@
 import { MapManager } from './map.js';
 import { UIManager } from './ui.js';
 import { APIClient } from './api.js';
+import { stateManager } from './state.js';
 
 // State FIPS to name mapping
 const STATE_NAMES = {
@@ -49,6 +50,9 @@ class DataCenterApp {
             console.log('Location selected:', location);
             this.uiManager.updateLocationDisplay(location);
             this.uiManager.enableAnalyzeButton();
+            
+            // Save location to state for persistence across pages
+            stateManager.saveLocation(location);
             console.log('Button should be enabled now');
         });
 
@@ -73,6 +77,9 @@ class DataCenterApp {
             config
         });
 
+        // Save config to state for persistence across pages
+        stateManager.saveConfig(config);
+
         try {
             // Show loading state
             const analyzeBtn = document.getElementById('analyze-btn');
@@ -88,6 +95,9 @@ class DataCenterApp {
                 </div>
                 <div class="analysis-content"></div>
             `;
+            
+            // Clear markdown buffer for new analysis
+            this.markdownBuffer = '';
 
             // Animate panel expansion
             const rightSidebar = document.getElementById('right-sidebar');
@@ -203,12 +213,27 @@ class DataCenterApp {
                 content.innerHTML += `
                     <div class="result-section analysis-section streaming">
                         <h3 class="result-title">AI Analysis</h3>
-                        <div class="streaming-analysis"></div>
+                        <div class="streaming-analysis markdown-content"></div>
                     </div>
                 `;
+                // Initialize markdown buffer
+                if (!this.markdownBuffer) {
+                    this.markdownBuffer = '';
+                }
             }
             const analysisDiv = content.querySelector('.streaming-analysis');
-            analysisDiv.textContent += data.text;
+            
+            // Accumulate markdown text
+            this.markdownBuffer = this.markdownBuffer || '';
+            this.markdownBuffer += data.text;
+            
+            // Parse and render markdown
+            if (typeof marked !== 'undefined') {
+                analysisDiv.innerHTML = marked.parse(this.markdownBuffer);
+            } else {
+                // Fallback to plain text if marked is not loaded
+                analysisDiv.textContent = this.markdownBuffer;
+            }
             
             // Auto-scroll to keep latest content visible
             const rightSidebar = document.querySelector('.right-sidebar .sidebar-content');
