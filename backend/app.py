@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify, Response, stream_with_context
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 import os
 import json
 import time
+import sys
 from dotenv import load_dotenv
 import anthropic
 import requests
@@ -204,65 +205,98 @@ def get_state_name_from_fips(state_fips: str) -> str:
     }
     return fips_to_state.get(state_fips, 'Unknown')
 
-def get_population_data(lat, lon, radius_miles=10):
-    """Get population data from US Census API"""
+def get_population_data(lat, lon):
+    """Fetch population and median income from Census API given coordinates."""
     try:
-        # Convert lat/lon to state and county FIPS codes
-        # Using reverse geocoding first
-        response = requests.get(
-            f'https://geocoding.geo.census.gov/geocoder/geographies/coordinates',
-            params={
-                'x': lon,
-                'y': lat,
-                'benchmark': 'Public_AR_Current',
-                'vintage': 'Current_Current',
-                'format': 'json'
+        print("✅ Running get_population_data from:", __file__, file=sys.stderr)
+
+        # Step 1: Get state/county FIPS from coordinates
+        geo_url = "https://geocoding.geo.census.gov/geocoder/geographies/coordinates"
+        geo_params = {
+            "x": lon,
+            "y": lat,
+            "benchmark": "Public_AR_Current",
+            "vintage": "Current_Current",
+            "format": "json"
+        }
+        geo_resp = requests.get(geo_url, params=geo_params)
+        geo_json = geo_resp.json() if geo_resp.status_code == 200 else {}
+
+        counties = geo_json.get("result", {}).get("geographies", {}).get("Counties", [])
+        if not counties:
+            return {"location_name": "Unknown", "population": 0, "median_income": 0,
+                    "state_fips": "", "county_fips": ""}
+
+        county = counties[0]
+        state_fips = county.get("STATE", "")
+        county_fips = county.get("COUNTY", "")
+
+        # Step 2: Get population data from Census API
+        pop_url = "https://api.census.gov/data/2021/acs/acs5"
+        pop_params = {
+            "get": "NAME,B01003_001E,B19013_001E",
+            "for": f"county:{county_fips}",
+            "in": f"state:{state_fips}",
+            "key": CENSUS_API_KEY
+        }
+        pop_resp = requests.get(pop_url, params=pop_params)
+        print("DEBUG: Census URL =", pop_resp.url, file=sys.stderr)
+        print("DEBUG: Status =", pop_resp.status_code, file=sys.stderr)
+
+        if pop_resp.status_code != 200:
+            print("DEBUG: Bad Census response:", pop_resp.text[:200], file=sys.stderr)
+            return {
+                "location_name": "Unknown",
+                "population": 0,
+                "median_income": 0,
+                "state_fips": state_fips,
+                "county_fips": county_fips
             }
-        )
-        
-        if response.status_code == 200:
-            geo_data = response.json()
-            if 'result' in geo_data and 'geographies' in geo_data['result']:
-                county_data = geo_data['result']['geographies'].get('Counties', [{}])[0]
-                state_fips = county_data.get('STATE', '')
-                county_fips = county_data.get('COUNTY', '')
-                
-                # Get population data
-                pop_response = requests.get(
-                    'https://api.census.gov/data/2021/acs/acs5',
-                    params={
-                        'get': 'NAME,B01003_001E,B19013_001E',  # Total population, Median income
-                        'for': f'county:{county_fips}',
-                        'in': f'state:{state_fips}',
-                        'key': CENSUS_API_KEY
-                    }
-                )
-                
-                if pop_response.status_code == 200:
-                    pop_data = pop_response.json()
-                    if len(pop_data) > 1:
-                        return {
-                            'location_name': pop_data[1][0],
-                            'population': int(pop_data[1][1]),
-                            'median_income': int(pop_data[1][2]) if pop_data[1][2] not in ['-666666666', None] else 0,
-                            'state_fips': state_fips,
-                            'county_fips': county_fips
-                        }
-        
+
+        try:
+            pop_data = pop_resp.json()
+        except Exception as e:
+            print("DEBUG: JSON decode error:", e, file=sys.stderr)
+            print("DEBUG: Response text:", pop_resp.text[:200], file=sys.stderr)
+            return {
+                "location_name": "Unknown",
+                "population": 0,
+                "median_income": 0,
+                "state_fips": state_fips,
+                "county_fips": county_fips
+            }
+
+        if isinstance(pop_data, list) and len(pop_data) >= 2:
+            row = pop_data[1]
+            population = int(row[1]) if row[1].isdigit() else 0
+            try:
+                median_income = int(row[2])
+            except:
+                median_income = 0
+            return {
+                "location_name": row[0],
+                "population": population,
+                "median_income": median_income,
+                "state_fips": state_fips,
+                "county_fips": county_fips
+            }
+
         return {
-            'location_name': 'Unknown',
-            'population': 0,
-            'median_income': 0,
-            'state_fips': '',
-            'county_fips': ''
+            "location_name": "Unknown",
+            "population": 0,
+            "median_income": 0,
+            "state_fips": state_fips,
+            "county_fips": county_fips
         }
+
     except Exception as e:
-        print(f"Error fetching population data: {e}")
+        print("DEBUG: Exception in get_population_data:", e, file=sys.stderr)
         return {
-            'location_name': 'Unknown',
-            'population': 0,
-            'median_income': 0
+            "location_name": "Unknown",
+            "population": 0,
+            "median_income": 0
         }
+
 
 def get_energy_data(state_code):
     """Get energy cost data from EIA API"""
@@ -706,6 +740,10 @@ def analyze_datacenter():
             'analysis': llm_analysis,
             'street_address': street_address
         }
+
+        with open('latest_report.json', 'w') as f:
+            import json
+            json.dump(report, f, indent=2)
         
         return jsonify(report)
         
@@ -1352,10 +1390,14 @@ def get_datacenter_types():
     """Get available data center types and their specs"""
     return jsonify(DATA_CENTER_TIERS)
 
-@app.route('/health', methods=['GET'])
+@app.route("/health", methods=["GET", "OPTIONS"])
+@cross_origin()
 def health_check():
     """Health check endpoint"""
-    return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()})
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat()
+    }), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
