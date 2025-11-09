@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, Response, stream_with_context
+from api_wrapper import SimpleForecastEnhancer, EnhancementOptions
 from flask_cors import CORS, cross_origin
 import os
 import json
@@ -33,6 +34,14 @@ if not ANTHROPIC_API_KEY:
     raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+
+try:
+    env_enhancer = SimpleForecastEnhancer()
+    print("✅ Environmental insights engine initialized")
+except Exception as e:
+    print(f"⚠️ Warning: Environmental insights not available: {e}")
+    env_enhancer = None
+
 
 def calculate_water_consumption(servers: int, cooling_type: str = 'air_cooled') -> int:
     """
@@ -665,56 +674,278 @@ def calculate_impact_with_simulation(datacenter_config, location_data, energy_da
         }
     }
 
-
-@app.route('/api/analyze', methods=['POST'])
-def analyze_datacenter():
-    """Main endpoint to analyze data center impact"""
+# NEW ENDPOINT: Environmental Analysis for Data Center
+@app.route('/api/analyze/environmental', methods=['POST'])
+def analyze_environmental():
+    """
+    Get detailed environmental insights for a location
+    This is independent of data center analysis
+    """
     try:
         data = request.json
+        lat = data['latitude']
+        lon = data['longitude']
         
-        # Extract parameters
+        if not env_enhancer:
+            return jsonify({'error': 'Environmental insights not available'}), 503
+        
+        # Create a basic forecast structure for enhancement
+        basic_forecast = {
+            'location': f"Lat: {lat}, Lon: {lon}",
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        # Get climate data for context
+        climate_data = get_climate_data(lat, lon)
+        basic_forecast.update(climate_data)
+        
+        # Configure enhancement options
+        options = EnhancementOptions()
+        options.include_air_quality = data.get('include_air_quality', True)
+        options.include_emissions = data.get('include_emissions', True)
+        options.include_demographics = data.get('include_demographics', False)
+        options.include_infrastructure = data.get('include_infrastructure', True)
+        options.include_satellite = data.get('include_satellite', False)
+        options.include_water_quality = data.get('include_water_quality', False)
+        
+        # Enhance the forecast with environmental insights
+        enhanced = env_enhancer.enhance(
+            forecast=basic_forecast,
+            location={'lat': lat, 'lon': lon},
+            options=options
+        )
+        
+        # Generate human-readable report
+        report_text = env_enhancer.generate_report(enhanced)
+        
+        return jsonify({
+            'timestamp': datetime.now().isoformat(),
+            'location': {'latitude': lat, 'longitude': lon},
+            'environmental_insights': enhanced.get('environmental_insights', {}),
+            'environmental_risk_score': enhanced.get('environmental_risk_score', {}),
+            'recommendations': enhanced.get('environmental_recommendations', []),
+            'impact_radius_km': enhanced.get('impact_radius_km'),
+            'quality_of_life_score': enhanced.get('quality_of_life_score'),
+            'qol_category': enhanced.get('qol_category'),
+            'consolidated_analysis': enhanced.get('consolidated_analysis', {}),
+            'report_text': report_text
+        })
+        
+    except Exception as e:
+        print(f"Error in environmental analysis: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+# @app.route('/api/analyze', methods=['POST'])
+# def analyze_datacenter():
+#     """Main endpoint to analyze data center impact"""
+#     try:
+#         data = request.json
+        
+#         # Extract parameters
+#         lat = data['latitude']
+#         lon = data['longitude']
+#         dc_size = data.get('size', 'medium')
+        
+#         # Custom configuration if provided
+#         if 'custom' in data and data['custom']:
+#             datacenter_config = {
+#                 'name': data.get('name', 'Custom Data Center'),
+#                 'power_mw': data.get('power_mw', 10),
+#                 'servers': data.get('servers', 1000),
+#                 'square_feet': data.get('square_feet', 50000),
+#                 'water_gallons_per_day': data.get('water_gallons_per_day', 300000),
+#                 'employees': data.get('employees', 50)
+#             }
+#         else:
+#             datacenter_config = DATA_CENTER_TIERS.get(dc_size, DATA_CENTER_TIERS['medium'])
+        
+#         # Gather data from various APIs
+#         print(f"Fetching data for location: {lat}, {lon}")
+#         location_data = get_population_data(lat, lon)
+        
+#         # Get state code for energy data
+#         state_code = location_data.get('state_fips', 'US')
+#         energy_data = get_energy_data(state_code)
+        
+#         climate_data = get_climate_data(lat, lon)
+        
+#         # Calculate impacts
+#         impact_data = calculate_impact(datacenter_config, location_data, energy_data, climate_data)
+        
+#         # Generate LLM analysis
+#         llm_analysis = generate_llm_analysis(
+#             datacenter_config, 
+#             location_data, 
+#             energy_data, 
+#             climate_data, 
+#             impact_data,
+#             lat,
+#             lon
+#         )
+        
+#         # Compile full report
+#         report = {
+#             'timestamp': datetime.utcnow().isoformat(),
+#             'location': {
+#                 'latitude': lat,
+#                 'longitude': lon,
+#                 'name': location_data.get('location_name', 'Unknown'),
+#                 'population': location_data.get('population', 0),
+#                 'median_income': location_data.get('median_income', 0)
+#             },
+#             'datacenter': datacenter_config,
+#             'climate': climate_data,
+#             'energy_pricing': energy_data,
+#             'impact': impact_data,
+#             'analysis': llm_analysis,
+#         }
+
+#         with open('latest_report.json', 'w') as f:
+#             import json
+#             json.dump(report, f, indent=2)
+        
+#         return jsonify(report)
+        
+#     except Exception as e:
+#         print(f"Error in analyze endpoint: {e}")
+#         return jsonify({'error': str(e)}), 500
+
+# UTILITY ENDPOINT: Get environmental data types available
+@app.route('/api/environmental/options', methods=['GET'])
+def get_environmental_options():
+    """Get available environmental data types and their descriptions"""
+    return jsonify({
+        'available_options': {
+            'air_quality': {
+                'description': 'Real-time air quality index and pollutant levels',
+                'requires_api_key': 'AIRNOW_API_KEY',
+                'free_tier': True
+            },
+            'emissions': {
+                'description': 'Regional emissions factors and carbon intensity',
+                'requires_api_key': False,
+                'free_tier': True
+            },
+            'infrastructure': {
+                'description': 'Nearby infrastructure and environmental concerns',
+                'requires_api_key': False,
+                'free_tier': True
+            },
+            'demographics': {
+                'description': 'Population vulnerability and demographics',
+                'requires_api_key': 'CENSUS_API_KEY',
+                'free_tier': True
+            },
+            'water_quality': {
+                'description': 'Nearby water quality monitoring data',
+                'requires_api_key': False,
+                'free_tier': True
+            },
+            'satellite': {
+                'description': 'Satellite imagery analysis (vegetation, temperature)',
+                'requires_api_key': 'SENTINEL_HUB_CLIENT_ID',
+                'free_tier': False
+            },
+            'impact_radius': {
+                'description': 'Calculate environmental impact zones and safe distances',
+                'requires_api_key': False,
+                'free_tier': True
+            },
+            'quality_of_life': {
+                'description': 'Comprehensive quality of life index (0-100)',
+                'requires_api_key': False,
+                'free_tier': True
+            }
+        },
+        'initialized': env_enhancer is not None
+    })
+
+# MODIFIED ENDPOINT: Add environmental insights to data center analysis
+@app.route('/api/analyze/enhanced', methods=['POST'])
+def analyze_datacenter_with_environment():
+    """
+    Analyze data center impact WITH environmental insights
+    Combines your existing analysis with environmental data
+    """
+    try:
+        data = request.json
         lat = data['latitude']
         lon = data['longitude']
         dc_size = data.get('size', 'medium')
         
-        # Custom configuration if provided
+        # Get datacenter config (your existing code)
         if 'custom' in data and data['custom']:
+            servers = data.get('servers', 1000)
+            cooling_type = data.get('cooling_type', 'air_cooled')
             datacenter_config = {
                 'name': data.get('name', 'Custom Data Center'),
                 'power_mw': data.get('power_mw', 10),
-                'servers': data.get('servers', 1000),
+                'servers': servers,
                 'square_feet': data.get('square_feet', 50000),
-                'water_gallons_per_day': data.get('water_gallons_per_day', 300000),
-                'employees': data.get('employees', 50)
+                'water_gallons_per_day': calculate_water_consumption(servers, cooling_type),
+                'employees': data.get('employees', 50),
+                'cooling_type': cooling_type,
+                'server_type': data.get('server_type', 'enterprise'),
+                'datacenter_type': data.get('datacenter_type', 'enterprise')
             }
         else:
             datacenter_config = DATA_CENTER_TIERS.get(dc_size, DATA_CENTER_TIERS['medium'])
         
-        # Gather data from various APIs
-        print(f"Fetching data for location: {lat}, {lon}")
+        # Get your existing data (your existing code)
         location_data = get_population_data(lat, lon)
-        
-        # Get state code for energy data
         state_code = location_data.get('state_fips', 'US')
         energy_data = get_energy_data(state_code)
-        
         climate_data = get_climate_data(lat, lon)
         
-        # Calculate impacts
+        # Calculate your existing impacts
         impact_data = calculate_impact(datacenter_config, location_data, energy_data, climate_data)
         
-        # Generate LLM analysis
+        # ADD ENVIRONMENTAL INSIGHTS
+        environmental_data = None
+        if env_enhancer:
+            try:
+                # Create a forecast structure with data center info
+                dc_forecast = {
+                    'location': f"{location_data.get('location_name', 'Unknown')}",
+                    'temperature': climate_data.get('temperature'),
+                    'timestamp': datetime.now().isoformat(),
+                    'datacenter': datacenter_config  # Include DC specs
+                }
+                
+                # Get environmental insights for the location
+                options = EnhancementOptions.comprehensive()  # Get all data
+                enhanced = env_enhancer.enhance(
+                    forecast=dc_forecast,
+                    location={'lat': lat, 'lon': lon},
+                    options=options
+                )
+                
+                environmental_data = {
+                    'insights': enhanced.get('environmental_insights', {}),
+                    'risk_score': enhanced.get('environmental_risk_score', {}),
+                    'recommendations': enhanced.get('environmental_recommendations', []),
+                    'impact_radius_km': enhanced.get('impact_radius_km'),
+                    'safe_zone_radius_km': enhanced.get('safe_zone_radius_km'),
+                    'quality_of_life': {
+                        'score': enhanced.get('quality_of_life_score'),
+                        'category': enhanced.get('qol_category')
+                    },
+                    'consolidated_analysis': enhanced.get('consolidated_analysis')
+                }
+                
+            except Exception as e:
+                print(f"Warning: Could not get environmental insights: {e}")
+                environmental_data = {'error': str(e)}
+        
+        # Generate LLM analysis (your existing code)
         llm_analysis = generate_llm_analysis(
-            datacenter_config, 
-            location_data, 
-            energy_data, 
-            climate_data, 
-            impact_data,
-            lat,
-            lon
+            datacenter_config, location_data, energy_data, 
+            climate_data, impact_data, lat, lon
         )
         
-        # Compile full report
+        # Compile enhanced report
         report = {
             'timestamp': datetime.utcnow().isoformat(),
             'location': {
@@ -728,17 +959,16 @@ def analyze_datacenter():
             'climate': climate_data,
             'energy_pricing': energy_data,
             'impact': impact_data,
+            'environmental_analysis': environmental_data,  # NEW: Environmental insights
             'analysis': llm_analysis,
         }
-
-        with open('latest_report.json', 'w') as f:
-            import json
-            json.dump(report, f, indent=2)
         
         return jsonify(report)
         
     except Exception as e:
-        print(f"Error in analyze endpoint: {e}")
+        print(f"Error in enhanced analysis: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/analyze/stream', methods=['POST'])
@@ -1055,6 +1285,26 @@ def forecast_datacenter():
             'analysis': llm_analysis
         }
 
+        # Add environmental insights to forecast
+        if env_enhancer:
+            try:
+                options = EnhancementOptions.minimal()  # Fast, free options only
+                enhanced = env_enhancer.enhance(
+                    forecast=forecast_data,  # Your existing forecast
+                    location={'lat': lat, 'lon': lon},
+                    options=options
+                )
+                
+                # Add to your forecast response
+                forecast_report['environmental_insights'] = enhanced.get('environmental_insights')
+                forecast_report['impact_radius_km'] = enhanced.get('impact_radius_km')
+                forecast_report['quality_of_life'] = {
+                    'score': enhanced.get('quality_of_life_score'),
+                    'category': enhanced.get('qol_category')
+                }
+            except Exception as e:
+                print(f"Warning: Environmental enhancement failed: {e}")
+
         # Write the forecast report to a file for later retrieval or debugging
         with open("forecast_report.json", "w") as f:
             json.dump(forecast_report, f, indent=2, default=str)
@@ -1119,6 +1369,13 @@ def stream_forecast_datacenter():
             # Step 4: Get climate data
             yield f"data: {json.dumps({'status': 'progress', 'step': 'fetching_climate_data'})}\n\n"
             climate_data = get_climate_data(lat, lon)
+            
+            # Step 4.5: Get environmental insights (NEW - short-term insights)
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'fetching_environmental_insights'})}\n\n"
+            from services.environmental_insights import get_environmental_insights, format_insights_for_display
+            environmental_insights = get_environmental_insights(lat, lon)
+            insights_formatted = format_insights_for_display(environmental_insights)
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'environmental_insights_complete', 'data': insights_formatted})}\n\n"
             
             # Step 5: Prepare simulation
             yield f"data: {json.dumps({'status': 'progress', 'step': 'preparing_simulation', 'hours': simulation_hours})}\n\n"
@@ -1365,6 +1622,7 @@ Be specific, data-driven, and balanced. Use the actual simulation data to suppor
                     'household_impact': sim_result.community_impact['household_impact'],
                     'infrastructure_cost': sim_result.community_impact['infrastructure_cost']
                 },
+                'environmental_insights': insights_formatted,  # NEW: Short-term environmental insights
                 'analysis': llm_analysis
             }
             
