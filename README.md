@@ -4,13 +4,110 @@ Analyze the environmental and economic impact of data centers across the United 
 
 ## ✨ Features
 
-- 🗺️ **Interactive Mapbox Map** - Click anywhere in the USA to place a data center
-- ⚙️ **Customizable Configurations** - 4 presets (Small to Mega) or fully custom
-- 📊 **Comprehensive Analysis** - Energy, water, carbon, and economic impact
-- 🤖 **AI-Powered Insights** - Claude generates detailed analysis and recommendations
-- 🎨 **Modern UI** - Clean, modular, responsive design
+### 🗺️ Interactive Mapping
+- Click anywhere in the USA to place a data center
+- Real-time location selection with Mapbox integration
+- Visual marker placement with smooth animations
 
-## 🚀 Quick Start
+### ⚙️ Customizable Data Centers
+- **4 Preset Sizes**:
+  - Small (1 MW, 100 servers)
+  - Medium (10 MW, 1,000 servers)
+  - Large (50 MW, 10,000 servers)
+  - Mega (150 MW, 50,000 servers)
+- **Custom Configuration** - Define your own specifications:
+  - Power consumption (MW)
+  - Number of servers
+  - Facility size (sq ft)
+  - Water usage (gallons/day)
+  - Employee count
+
+### 📊 Comprehensive Analysis
+- **Energy Impact**:
+  - Annual kWh consumption
+  - Cost per household increase
+  - Regional demand impact percentage
+  - Equivalent homes powered
+
+- **Carbon Footprint**:
+  - Annual CO₂ emissions in tons
+  - Equivalent number of cars
+  - Environmental comparisons
+
+- **Water Resources**:
+  - Daily and annual water usage
+  - Regional water strain percentage
+  - Olympic pool equivalents
+
+- **Economic Metrics**:
+  - Jobs created
+  - Construction cost estimates
+  - Annual operating costs
+
+### 🤖 AI-Powered Insights
+Powered by Claude (Anthropic), the app generates detailed analysis including:
+- Overall environmental impact assessment
+- Energy infrastructure capacity concerns
+- Water resource implications
+- Community impact (bills, health, quality of life)
+- Climate considerations for cooling efficiency
+- Mitigation recommendations
+- Regulatory and permitting considerations
+
+## 🏗️ Architecture
+
+### Backend (Python/Flask)
+- **API Integrations**:
+  - **US Census Bureau API** - Population and demographic data
+  - **EIA (Energy Information Administration)** - Electricity pricing by region
+  - **OpenWeatherMap** - Local climate data for cooling calculations
+  - **Anthropic Claude API** - AI-powered analysis and report generation
+  
+- **Impact Calculator** - Sophisticated algorithms for calculating:
+  - Energy consumption and costs
+  - Carbon emissions (US grid average)
+  - Water usage and regional strain
+  - Economic impact metrics
+  - Climate-adjusted cooling requirements
+
+### Frontend (React)
+- **React 18** with modern hooks
+- **Mapbox GL JS** for interactive mapping
+- **Tailwind CSS** for beautiful, responsive design
+- **Axios** for API communication
+- **React Markdown** for formatted AI reports
+
+## 💧 Water Usage Calculation (Technical Detail)
+
+**Formula:** `water_gallons = cooling_power_kw × factor × temp_multiplier`
+
+| Cooling Type | Factor (gal/kWh) | Why? |
+|--------------|------------------|------|
+| **Air-Cooled** | 0.2 | Minimal - uses air, not water evaporation |
+| **Water-Cooled** | 1.8 | Highest - cooling towers evaporate + blowdown losses |
+| **Evaporative** | 1.0 | Moderate - direct evaporation, no blowdown |
+| **Liquid** | 0.3 | Low - closed loop, only heat rejection uses water |
+
+**Temperature Adjustment:** +2% water use per °F above 70°F (hotter = more evaporation needed)
+
+**Example:** 1 MW water-cooled DC at 90°F:
+- Cooling load: 250 kW (PUE 1.25)
+- Temp multiplier: 1.4 (90-70=20°F × 0.02)
+- Daily water: 250 × 1.8 × 1.4 × 24 = **15,120 gallons/day**
+
+*Factors based on thermodynamics (heat of vaporization) + industry benchmarks (Google, Microsoft, ASHRAE)*
+
+## 📡 APIs Used
+
+| API | Purpose | Free Tier |
+|-----|---------|-----------|
+| [US Census Bureau](https://www.census.gov/data/developers/data-sets.html) | Population, demographics, geographic data | Yes |
+| [EIA](https://www.eia.gov/opendata/) | Energy consumption, electricity rates | Yes |
+| [OpenWeatherMap](https://openweathermap.org/api) | Climate data for cooling calculations | 60 calls/min free |
+| [Mapbox](https://www.mapbox.com/) | Interactive maps, geocoding | 50k loads/month free |
+| [Anthropic Claude](https://www.anthropic.com/) | AI analysis and insights | Pay-as-you-go |
+
+## 🚀 Getting Started
 
 ### Prerequisites
 - Python 3.9+
