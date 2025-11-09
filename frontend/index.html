@@ -9,6 +9,9 @@
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet" />
     
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -77,10 +80,6 @@
                     <input type="number" id="square_feet" value="5000" min="100">
                 </div>
                 <div class="form-group">
-                    <label>Water Usage (gal/day)</label>
-                    <input type="number" id="water" value="25000" min="0">
-                </div>
-                <div class="form-group">
                     <label>Employees</label>
                     <input type="number" id="employees" value="10" min="1">
                 </div>
@@ -111,34 +110,42 @@
         </div>
 
         <!-- Right Sidebar - Results -->
-        <div class="right-sidebar">
-            <h2 class="sidebar-title">Analysis Results</h2>
-            <p class="sidebar-subtitle">Environmental impact summary</p>
+        <div class="right-sidebar" id="right-sidebar">
+            <div class="resize-handle" id="resize-handle"></div>
+            
+            <div class="sidebar-content">
+                <h2 class="sidebar-title">Analysis Results</h2>
+                <p class="sidebar-subtitle">Environmental impact summary</p>
 
-            <div id="results-container" class="results-container">
-                <div class="empty-state">
-                    <p>Click "Analyze Impact" to see results</p>
+                <div id="results-container" class="results-container">
+                    <div class="empty-state">
+                        <p>Click "Analyze Impact" to see results</p>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Current Specs Summary -->
-            <div id="specs-summary" class="specs-summary">
-                <div class="section-title">Current Configuration</div>
-                <div class="spec-row">
-                    <span>Power:</span>
-                    <strong><span id="spec-power">1</span> MW</strong>
-                </div>
-                <div class="spec-row">
-                    <span>Servers:</span>
-                    <strong><span id="spec-servers">100</span></strong>
-                </div>
-                <div class="spec-row">
-                    <span>Size:</span>
-                    <strong><span id="spec-size">5,000</span> sq ft</strong>
-                </div>
-                <div class="spec-row">
-                    <span>Water:</span>
-                    <strong><span id="spec-water">25</span>k gal/day</strong>
+                <!-- Charts and Visualizations (populated after AI analysis) -->
+                <div id="charts-container" class="charts-container" style="display: none;">
+                    <h2 class="sidebar-title">Impact Visualizations</h2>
+                    
+                    <div class="chart-section">
+                        <h3 class="chart-title">Energy & Carbon Footprint</h3>
+                        <canvas id="energyCarbonChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-section">
+                        <h3 class="chart-title">Resource Consumption</h3>
+                        <canvas id="resourceChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-section">
+                        <h3 class="chart-title">Economic Impact</h3>
+                        <canvas id="economicChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-section">
+                        <h3 class="chart-title">Regional Impact Comparison</h3>
+                        <canvas id="regionalChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -146,5 +153,50 @@
 
     <!-- Application Scripts -->
     <script type="module" src="js/app.js"></script>
+    
+    <script>
+        // Resizable right panel
+        (function() {
+            const resizeHandle = document.getElementById('resize-handle');
+            const rightSidebar = document.getElementById('right-sidebar');
+            const mainContent = document.querySelector('.main-content');
+            
+            const MIN_WIDTH = 360;
+            const MAX_WIDTH = 800;
+            
+            let isResizing = false;
+            let startX = 0;
+            let startWidth = 360;
+            
+            resizeHandle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = rightSidebar.offsetWidth;
+                
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                
+                const deltaX = startX - e.clientX; // Inverted because we're dragging from right
+                const newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, startWidth + deltaX));
+                
+                rightSidebar.style.width = newWidth + 'px';
+                rightSidebar.style.flexShrink = '0';
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

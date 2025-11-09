@@ -17,7 +17,7 @@ from services.simulate import (
     GridImpactCalculator
 )
 
-load_dotenv()
+load_dotenv('config.env')
 
 app = Flask(__name__)
 CORS(app)
@@ -33,6 +33,27 @@ if not ANTHROPIC_API_KEY:
     raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+
+def calculate_water_consumption(servers: int, cooling_type: str = 'air_cooled') -> int:
+    """
+    Calculate daily water consumption based on server count and cooling type.
+    
+    Average water usage per server per day varies by cooling method:
+    - Air cooled: ~180 gallons/server/day (uses less water, more electricity)
+    - Water cooled: ~250 gallons/server/day (evaporative cooling)
+    - Liquid cooling: ~100 gallons/server/day (more efficient, closed loop)
+    
+    Source: Data centers typically use 1-5 million gallons per day for every 
+    10,000-50,000 servers depending on cooling efficiency.
+    """
+    if cooling_type == 'liquid_cooling':
+        gallons_per_server = 100
+    elif cooling_type == 'water_cooled':
+        gallons_per_server = 250
+    else:  # air_cooled (default)
+        gallons_per_server = 180
+    
+    return int(servers * gallons_per_server)
 
 # Data center specifications mapping
 DATA_CENTER_TIERS = {
@@ -404,7 +425,7 @@ def calculate_impact(datacenter_config, location_data, energy_data, climate_data
     temp = climate_data.get('temperature', 70)
     cooling_factor = 1 + ((temp - 70) / 100)  # 1% increase per degree above 70°F
     adjusted_power_usage = annual_kwh * cooling_factor
-    
+
     return {
         'energy': {
             'annual_mwh': power_mw * 24 * 365,
@@ -732,13 +753,19 @@ def stream_analyze_datacenter():
     
     # Custom configuration if provided
     if 'custom' in data and data['custom']:
+        servers = data.get('servers', 1000)
+        cooling_type = data.get('cooling_type', 'air_cooled')
+        
         datacenter_config = {
             'name': data.get('name', 'Custom Data Center'),
             'power_mw': data.get('power_mw', 10),
-            'servers': data.get('servers', 1000),
+            'servers': servers,
             'square_feet': data.get('square_feet', 50000),
-            'water_gallons_per_day': data.get('water_gallons_per_day', 300000),
-            'employees': data.get('employees', 50)
+            'water_gallons_per_day': calculate_water_consumption(servers, cooling_type),
+            'employees': data.get('employees', 50),
+            'cooling_type': cooling_type,
+            'server_type': data.get('server_type', 'enterprise'),
+            'datacenter_type': data.get('datacenter_type', 'enterprise')
         }
     else:
         datacenter_config = DATA_CENTER_TIERS.get(dc_size, DATA_CENTER_TIERS['medium'])
@@ -830,14 +857,17 @@ Please provide a comprehensive analysis covering:
 6. **Recommendations** - Mitigation strategies and whether this location is suitable
 7. **Regulatory Considerations** - Potential legal/permitting challenges
 
-Be specific, data-driven, and balanced (mention both concerns and benefits)."""
+Be specific, data-driven, and balanced (mention both concerns and benefits).
+
+Be concise, to the point, and only include the most important information. Have a main statement for each section and then have a few bullet points. No numbered bullet points.
+"""
 
             # Stream the LLM response
             llm_analysis_chunks = []
             try:
                 with client.messages.stream(
                     model="claude-sonnet-4-5-20250929",
-                    max_tokens=2048,
+                    max_tokens=1000,
                     messages=[{"role": "user", "content": prompt}]
                 ) as stream:
                     for text in stream.text_stream:
