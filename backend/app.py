@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, Response, stream_with_context
-from api_wrapper import SimpleForecastEnhancer, EnhancementOptions
+from insight_forecast.api_wrapper import SimpleForecastEnhancer, EnhancementOptions
 from flask_cors import CORS, cross_origin
 import os
 import json
@@ -18,10 +18,11 @@ from services.simulate import (
     GridImpactCalculator
 )
 
-load_dotenv('config.env')
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
 
 # API Keys
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
@@ -326,7 +327,6 @@ def get_population_data(lat, lon):
             "population": 0,
             "median_income": 0
         }
-
 
 def get_energy_data(state_code):
     """Get energy cost data from EIA API"""
@@ -724,7 +724,9 @@ def analyze_environmental():
             'environmental_insights': enhanced.get('environmental_insights', {}),
             'environmental_risk_score': enhanced.get('environmental_risk_score', {}),
             'recommendations': enhanced.get('environmental_recommendations', []),
-            'impact_radius_km': enhanced.get('impact_radius_km'),
+            'maximum_impact_radius_km': enhanced.get('maximum_impact_radius_km'),
+            'safe_zone_radius_km': enhanced.get('safe_zone_radius_km'),
+            'impact_gradient': enhanced.get('impact_gradient'),
             'quality_of_life_score': enhanced.get('quality_of_life_score'),
             'qol_category': enhanced.get('qol_category'),
             'consolidated_analysis': enhanced.get('consolidated_analysis', {}),

@@ -480,7 +480,7 @@ class EnvironmentalInsightsEngine:
         
         # Import the impact radius analyzer
         try:
-            from impact_radius import ConsolidatedAnalyzer
+            from .impact_radius import ConsolidatedAnalyzer
             self.consolidated_analyzer = ConsolidatedAnalyzer()
         except ImportError:
             self.consolidated_analyzer = None
@@ -560,6 +560,7 @@ class EnvironmentalInsightsEngine:
                 # Add key metrics directly to top level for easy access
                 enhanced_forecast['impact_radius_km'] = consolidated['impact_radius_analysis']['maximum_impact_radius_km']
                 enhanced_forecast['safe_zone_radius_km'] = consolidated['impact_radius_analysis']['safe_zone_radius_km']
+                enhanced_forecast['impact_gradient'] = consolidated['impact_radius_analysis']['impact_gradient']
                 enhanced_forecast['quality_of_life_score'] = consolidated['quality_of_life_analysis']['overall_score']
                 enhanced_forecast['qol_category'] = consolidated['quality_of_life_analysis']['category']
                 

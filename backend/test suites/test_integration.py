@@ -16,7 +16,7 @@ load_dotenv("backend/config.env")
 
 # Test configuration
 TEST_LOCATION = {
-    'lat': 40.7128,  # New York City
+    'lat': 40.7128,  
     'lon': -74.0060
 }
 

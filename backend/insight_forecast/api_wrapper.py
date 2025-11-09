@@ -283,10 +283,10 @@ class SimpleForecastEnhancer:
     """
     
     def __init__(self, credentials: Optional[APICredentials] = None):
-        from environmental import EnvironmentalInsightsEngine
+        from .environmental import EnvironmentalInsightsEngine
         
         # Load from config.env
-        self.credentials = credentials or APICredentials.from_env_file("backend/config.env")
+        self.credentials = credentials or APICredentials.from_env_file()
         
         # Initialize engines
         self.insights_engine = EnvironmentalInsightsEngine()
