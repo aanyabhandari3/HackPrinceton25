@@ -52,3 +52,5 @@ htmlcov/
 tmp/
 temp/
 
+backend/forecast_report.json
+backend/.env
