@@ -46,10 +46,10 @@ export const DATA_CENTER_TYPES = {
 
 // API Configuration
 export const API_CONFIG = {
-    baseUrl: '/api',
+    baseUrl: 'http://127.0.0.1:5000',
     endpoints: {
-        analyze: '/analyze',
-        dataCenterTypes: '/datacenter-types'
+        analyze: '/api/analyze',
+        dataCenterTypes: '/api/datacenter-types'
     }
 };
 

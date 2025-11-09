@@ -6,7 +6,7 @@ import anthropic
 import requests
 from datetime import datetime
 
-load_dotenv()
+load_dotenv('config.env')
 
 app = Flask(__name__)
 CORS(app)
