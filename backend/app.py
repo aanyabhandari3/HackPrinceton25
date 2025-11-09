@@ -376,20 +376,26 @@ def get_climate_data(lat, lon):
             return {
                 'temperature': data['main']['temp'],
                 'humidity': data['main']['humidity'],
-                'description': data['weather'][0]['description']
+                'description': data['weather'][0]['description'],
+                'wind_speed': data.get('wind', {}).get('speed', 5),  # mph
+                'wind_direction': data.get('wind', {}).get('deg', 0)  # degrees (0 = North)
             }
         
         return {
             'temperature': 70,
             'humidity': 50,
-            'description': 'Unknown'
+            'description': 'Unknown',
+            'wind_speed': 5,
+            'wind_direction': 0
         }
     except Exception as e:
         print(f"Error fetching climate data: {e}")
         return {
             'temperature': 70,
             'humidity': 50,
-            'description': 'Unknown'
+            'description': 'Unknown',
+            'wind_speed': 5,
+            'wind_direction': 0
         }
 
 def calculate_impact(datacenter_config, location_data, energy_data, climate_data):
@@ -1100,6 +1106,13 @@ def stream_forecast_datacenter():
     
     def generate():
         try:
+            # Import simulation models at the beginning
+            from services.simulate import (
+                ServerPowerModel, WorkloadSimulator, CoolingEfficiencyModel, 
+                GridImpactCalculator, PowerSimulationResult
+            )
+            from datetime import timedelta
+            
             last_heartbeat = time.time()
             
             # Step 1: Initial status
@@ -1108,6 +1121,7 @@ def stream_forecast_datacenter():
             # Step 2: Gather location data
             yield f"data: {json.dumps({'status': 'progress', 'step': 'fetching_location_data'})}\n\n"
             location_data = get_population_data(lat, lon)
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'location_data_complete', 'location': location_data})}\n\n"
             
             # Step 3: Get grid and energy data
             yield f"data: {json.dumps({'status': 'progress', 'step': 'fetching_energy_data'})}\n\n"
@@ -1115,12 +1129,19 @@ def stream_forecast_datacenter():
             state_name = get_state_name_from_fips(state_fips)
             region_code = map_state_to_grid_region(state_fips)
             energy_data = get_energy_data(state_fips)
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'energy_data_complete', 'energy': energy_data})}\n\n"
             
             # Step 4: Get climate data
             yield f"data: {json.dumps({'status': 'progress', 'step': 'fetching_climate_data'})}\n\n"
             climate_data = get_climate_data(lat, lon)
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'climate_data_complete', 'climate': climate_data})}\n\n"
             
-            # Step 5: Prepare simulation
+            # Step 5: Get grid configuration for carbon calculations
+            grid_calculator = GridImpactCalculator()
+            grid_config = grid_calculator.grid_regions.get(region_code, grid_calculator.grid_regions['DEFAULT'])
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'grid_config_complete', 'grid': {'carbon_intensity': grid_config['carbon_intensity'], 'base_rate': grid_config['base_rate'], 'region': region_code}})}\n\n"
+            
+            # Step 6: Prepare simulation
             yield f"data: {json.dumps({'status': 'progress', 'step': 'preparing_simulation', 'hours': simulation_hours})}\n\n"
             dc_specs = create_datacenter_specs_from_config(datacenter_config)
             climate = create_climate_data_from_api(climate_data)
@@ -1128,11 +1149,6 @@ def stream_forecast_datacenter():
             
             # Step 6: Run simulation with progress updates (inline loop for streaming)
             yield f"data: {json.dumps({'status': 'simulating', 'hours_total': simulation_hours})}\n\n"
-            from services.simulate import (
-                ServerPowerModel, WorkloadSimulator, CoolingEfficiencyModel, 
-                GridImpactCalculator, PowerSimulationResult
-            )
-            from datetime import timedelta
             
             # Initialize models
             server_model = ServerPowerModel(server_type=dc_specs.server_type)
@@ -1207,7 +1223,6 @@ def stream_forecast_datacenter():
             
             # Step 7: Calculate costs
             yield f"data: {json.dumps({'status': 'calculating_costs'})}\n\n"
-            grid_config = grid_calculator.grid_regions.get(region_code, grid_calculator.grid_regions['DEFAULT'])
             annual_kwh = sim_result.annual_consumption_mwh * 1000
             annual_cost = annual_kwh * grid_config['base_rate']
             annual_co2_kg = annual_kwh * grid_config['carbon_intensity']
@@ -1279,14 +1294,27 @@ Community & Grid Impact:
 
 Please provide a comprehensive analysis covering:
 1. **Overall Performance Assessment** - How well does this data center perform based on the simulation?
-2. **Energy Efficiency Analysis** - Assess PUE trends, cooling efficiency, and optimization opportunities
-3. **Grid & Community Impact** - Detailed analysis of impact on local grid and households
-4. **Workload Pattern Analysis** - What do the utilization patterns tell us about this facility?
-5. **Environmental Concerns** - Carbon footprint and environmental sustainability analysis
-6. **Infrastructure Requirements** - What grid infrastructure upgrades are needed?
-7. **Cost-Benefit Analysis** - Economic impacts (jobs, costs to community, energy costs)
-8. **Risk Assessment** - Grid stability risks, power supply concerns, regulatory challenges
-9. **Recommendations** - Specific mitigation strategies, optimization opportunities, and site suitability
+2. **Mathematical Modeling & Equations** - Explain the mathematical reasoning and equations used to arrive at the results. Include:
+   - Normal distribution for utilization variance
+   - Poisson distribution for usage spikes
+   - Cubic interpolation for smooth power curves
+   - PUE calculations
+   - Energy integration formulas
+   Use LaTeX for all equations. Format inline math with single dollar signs: $E = mc^2$
+   Format display equations with double dollar signs on separate lines:
+   $$
+   E = \\int_0^T P(t) dt
+   $$
+3. **Energy Efficiency Analysis** - Assess PUE trends, cooling efficiency, and optimization opportunities
+4. **Grid & Community Impact** - Detailed analysis of impact on local grid and households
+5. **Workload Pattern Analysis** - What do the utilization patterns tell us about this facility?
+6. **Environmental Concerns** - Carbon footprint and environmental sustainability analysis
+7. **Infrastructure Requirements** - What grid infrastructure upgrades are needed?
+8. **Cost-Benefit Analysis** - Economic impacts (jobs, costs to community, energy costs)
+9. **Risk Assessment** - Grid stability risks, power supply concerns, regulatory challenges
+10. **Recommendations** - Specific mitigation strategies, optimization opportunities, and site suitability
+
+IMPORTANT: Write all mathematical equations using proper LaTeX syntax with dollar signs ($...$) for inline and ($$...$$) for block equations. Do NOT use placeholders like "INLINE_MATH_X" or "BLOCK_MATH_Y".
 
 Be specific, data-driven, and balanced. Use the actual simulation data to support your analysis. Consider both technical performance and community impact."""
 

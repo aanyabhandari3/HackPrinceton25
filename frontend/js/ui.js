@@ -130,5 +130,65 @@ export class UIManager {
     onConfigChange(callback) {
         this.onConfigChangeCallback = callback;
     }
+
+    renderMarkdownWithLatex(markdownText) {
+        // Process LaTeX before markdown parsing
+        let processedText = markdownText;
+        
+        // Replace block LaTeX ($$...$$) with placeholders that markdown won't touch
+        const blockMathMatches = [];
+        processedText = processedText.replace(/\$\$([\s\S]+?)\$\$/g, (match, latex) => {
+            const index = blockMathMatches.length;
+            blockMathMatches.push(latex);
+            return `<!--BLOCKMATHSTART${index}BLOCKMATHEND-->`;
+        });
+        
+        // Replace inline LaTeX ($...$) with placeholders that markdown won't touch
+        const inlineMathMatches = [];
+        processedText = processedText.replace(/\$([^\$\n]+?)\$/g, (match, latex) => {
+            const index = inlineMathMatches.length;
+            inlineMathMatches.push(latex);
+            return `<!--INLINEMATHSTART${index}INLINEMATHEND-->`;
+        });
+        
+        // Render markdown
+        let html = marked.parse(processedText);
+        
+        // Render block math with KaTeX
+        html = html.replace(/<!--BLOCKMATHSTART(\d+)BLOCKMATHEND-->/g, (match, index) => {
+            try {
+                if (typeof katex !== 'undefined') {
+                    return katex.renderToString(blockMathMatches[index], {
+                        displayMode: true,
+                        throwOnError: false,
+                        trust: true
+                    });
+                }
+                return `$$${blockMathMatches[index]}$$`;
+            } catch (e) {
+                console.error('KaTeX block rendering error:', e);
+                return `$$${blockMathMatches[index]}$$`;
+            }
+        });
+        
+        // Render inline math with KaTeX
+        html = html.replace(/<!--INLINEMATHSTART(\d+)INLINEMATHEND-->/g, (match, index) => {
+            try {
+                if (typeof katex !== 'undefined') {
+                    return katex.renderToString(inlineMathMatches[index], {
+                        displayMode: false,
+                        throwOnError: false,
+                        trust: true
+                    });
+                }
+                return `$${inlineMathMatches[index]}$`;
+            } catch (e) {
+                console.error('KaTeX inline rendering error:', e);
+                return `$${inlineMathMatches[index]}$`;
+            }
+        });
+        
+        return html;
+    }
 }
 

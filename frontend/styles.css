@@ -54,7 +54,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .logo-full {
-    height: 136px;
+    height: 120px;
     width: auto;
     display: block;
 }
@@ -947,10 +947,609 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
+/* ==================== FORECAST PAGE ==================== */
+
+/* Forecast Sidebar - Expanded Width (only when forecast is running) */
+.forecast-page .right-sidebar.expanded {
+    width: 600px;
+    animation: expandPulse 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Forecast Timeline Visualization */
+.forecast-start-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #000000;
+}
+
+.forecast-start-state button {
+    background: #6fa8bb;
+    color: white;
+    border: none;
+    padding: 16px 48px;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(120, 119, 43, 0.5);
+}
+
+.forecast-start-state button:hover {
+    background: linear-gradient(135deg, #a0a846 0%, #6fa8bb 100%);
+    filter: none;
+    opacity: 1;
+}
+
+.forecast-start-state button:active {
+    transform: translateY(1px);
+}
+
+.timeline-container {
+    padding: 20px;
+    animation: fadeIn 0.5s ease;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.timeline-title {
+    margin: 0;
+    font-size: 18px;
+    color: #000000;
+    font-family: 'Space Mono', monospace;
+    font-weight: 600;
+}
+
+.timeline-stats {
+    display: flex;
+    gap: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: #000000;
+}
+
+.timeline-track {
+    background: rgba(194, 217, 163, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    border: 2px solid #c2d9a3;
+}
+
+#timeline-canvas {
+    width: 100%;
+    height: 100px;
+    display: block;
+}
+
+.timeline-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.metric-box {
+    background: rgba(194, 217, 163, 0.15);
+    border: 2px solid #c2d9a3;
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+}
+
+.metric-label {
+    font-size: 11px;
+    color: #000000;
+    margin-bottom: 6px;
+    font-family: 'Space Mono', monospace;
+    opacity: 0.7;
+}
+
+.metric-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #000000;
+    font-family: 'Space Mono', monospace;
+}
+
+.simulation-status {
+    background: rgba(120, 119, 43, 0.15);
+    border: 2px solid #78772b;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #15350e;
+    font-family: 'Space Mono', monospace;
+    text-align: center;
+    font-weight: 600;
+}
+
+.analysis-results {
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(194, 217, 163, 0.1);
+    border-radius: 8px;
+    border: 2px solid #c2d9a3;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Digital Odometer Styling */
+.odometer-container {
+    margin: 20px 0;
+    padding: 16px;
+    background: rgba(88, 135, 149, 0.1);
+    border: 2px solid #588795;
+    border-radius: 8px;
+}
+
+.odometer-title {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: #000000;
+    font-family: 'Space Mono', monospace;
+    font-weight: 600;
+    text-align: center;
+}
+
+.odometer-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.odometer-card {
+    background: rgba(194, 217, 163, 0.15);
+    border: 2px solid #c2d9a3;
+    border-radius: 6px;
+    padding: 12px;
+    transition: all 0.3s ease;
+}
+
+.odometer-card-full {
+    grid-column: 1 / -1;
+    max-width: 60%;
+    margin: 0 auto;
+}
+
+.odometer-card:hover {
+    background: rgba(194, 217, 163, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(59, 83, 22, 0.2);
+}
+
+.odometer-card.updating {
+    animation: numberFlip 0.5s ease;
+    background: rgba(120, 119, 43, 0.2);
+    border-color: #78772b;
+}
+
+.odometer-label {
+    font-size: 11px;
+    color: #000000;
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 8px;
+    opacity: 0.8;
+    text-align: center;
+}
+
+.odometer-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+    min-height: 32px;
+}
+
+.odometer-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #000000;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 2px;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    display: inline-block;
+    position: relative;
+}
+
+.odometer-value.rolling {
+    animation: rollUp 0.3s ease-out;
+}
+
+@keyframes rollUp {
+    0% {
+        transform: translateY(10px);
+        opacity: 0.5;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.odometer-unit {
+    font-size: 12px;
+    color: #000000;
+    font-family: 'Space Mono', monospace;
+    opacity: 0.6;
+    font-weight: 500;
+}
+
+.odometer-currency {
+    font-size: 20px;
+    color: #000000;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    opacity: 0.8;
+}
+
+/* Number flip animation */
+@keyframes numberFlip {
+    0% {
+        transform: rotateX(0deg);
+    }
+    50% {
+        transform: rotateX(-90deg);
+    }
+    100% {
+        transform: rotateX(0deg);
+    }
+}
+
+.odometer-value.flipping {
+    animation: numberFlip 0.4s ease-in-out;
+}
+
+/* Glow effect when updating */
+.odometer-card.updating {
+    box-shadow: 0 0 20px rgba(120, 119, 43, 0.3);
+}
+
+/* Human Cost Section */
+.human-cost-container {
+    margin: 20px 0;
+    padding: 16px;
+    background: rgba(59, 83, 22, 0.1);
+    border: 2px solid #3b5316;
+    border-radius: 8px;
+}
+
+.human-cost-title {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: #000000;
+    font-family: 'Space Mono', monospace;
+    font-weight: 600;
+    text-align: center;
+}
+
+.human-cost-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: rgba(194, 217, 163, 0.15);
+    border: 2px solid #c2d9a3;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.human-cost-item:last-child {
+    margin-bottom: 0;
+}
+
+.human-cost-item:hover {
+    transform: translateX(4px);
+    box-shadow: -4px 4px 12px rgba(59, 83, 22, 0.2);
+}
+
+.human-cost-highlight {
+    background: rgba(120, 119, 43, 0.2);
+    border-color: #78772b;
+    border-width: 3px;
+}
+
+.human-cost-text {
+    flex: 1;
+}
+
+.human-cost-label {
+    display: block;
+    font-size: 11px;
+    color: #000000;
+    font-family: 'Space Mono', monospace;
+    opacity: 0.7;
+    margin-bottom: 4px;
+}
+
+.human-cost-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.human-cost-number {
+    font-size: 20px;
+    font-weight: 700;
+    color: #000000;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.human-cost-number.updating {
+    color: #15350e;
+    animation: pulse 0.5s ease;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.human-cost-unit {
+    font-size: 13px;
+    color: #000000;
+    font-family: 'Space Mono', monospace;
+    opacity: 0.8;
+}
+
+.human-cost-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    min-width: 80px;
+    max-width: 120px;
+}
+
+.impact-icon {
+    width: 50px;
+    height: 50px;
+    color: #3b5316;
+    transition: all 0.3s ease;
+}
+
+.human-cost-item:hover .impact-icon {
+    transform: scale(1.1);
+    color: #588795;
+}
+
+.impact-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(194, 217, 163, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(59, 83, 22, 0.3);
+}
+
+.impact-bar::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #588795, #78772b);
+    border-radius: 4px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.impact-bar.active::after {
+    width: var(--bar-width, 0%);
+}
+
+@keyframes barPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* LLM Report Section */
+.llm-report-section {
+    margin-top: 24px;
+    border: 2px solid #c2d9a3;
+    border-radius: 8px;
+    background: rgba(194, 217, 163, 0.05);
+    overflow: hidden;
+    animation: slideIn 0.5s ease;
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: rgba(194, 217, 163, 0.15);
+    border-bottom: 1px solid #c2d9a3;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    user-select: none;
+}
+
+.report-header:hover {
+    background: rgba(194, 217, 163, 0.25);
+}
+
+.report-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.report-chevron {
+    transition: transform 0.3s ease;
+    color: #3b5316;
+}
+
+.report-chevron.expanded {
+    transform: rotate(180deg);
+}
+
+.report-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #15350e;
+    font-family: 'Space Mono', monospace;
+}
+
+.report-badge {
+    background: #588795;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.report-badge.streaming {
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.85;
+        transform: scale(1.05);
+    }
+}
+
+.report-download-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: #588795;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Space Mono', monospace;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.report-download-btn:hover {
+    background: #78772b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(88, 135, 149, 0.3);
+}
+
+.report-download-btn svg {
+    flex-shrink: 0;
+}
+
+.report-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.report-content.expanded {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.report-content .markdown-content {
+    padding: 20px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* Scrollbar styling for report */
+.report-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.report-content::-webkit-scrollbar-track {
+    background: rgba(194, 217, 163, 0.1);
+}
+
+.report-content::-webkit-scrollbar-thumb {
+    background: #c2d9a3;
+    border-radius: 4px;
+}
+
+.report-content::-webkit-scrollbar-thumb:hover {
+    background: #588795;
+}
+
+/* Compact Legend Styling */
+.legend-container-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.legend-item-compact {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.legend-color-compact {
+    width: 24px;
+    height: 16px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.legend-label-compact {
+    color: #000000;
+    font-family: 'Space Mono', monospace;
+}
+
+/* Heatmap Info Styling */
+.heatmap-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(194, 217, 163, 0.1);
+    border: 1px solid #c2d9a3;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+}
+
+.info-label {
+    color: #15350e;
+    font-weight: 600;
+}
+
+.info-value {
+    color: #588795;
+    font-weight: 700;
+    text-align: right;
+}
+
 /* Cache Notification Styling */
 .cache-notification {
-    background: linear-gradient(135deg, rgba(255, 195, 0, 0.15), rgba(255, 195, 0, 0.05));
-    border: 2px solid rgba(255, 195, 0, 0.4);
+    background: linear-gradient(135deg, rgba(194, 217, 163, 0.2), rgba(194, 217, 163, 0.05));
+    border: 2px solid #c2d9a3;
     border-radius: 8px;
     padding: 16px;
     margin-bottom: 20px;
@@ -1166,6 +1765,39 @@ h1, h2, h3, h4, h5, h6 {
 
 .markdown-content em {
     font-style: italic;
+}
+
+/* KaTeX Math Rendering Styles */
+.markdown-content .katex {
+    font-size: 1.05em;
+}
+
+.markdown-content .katex-display {
+    margin: 1.5em 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 1em;
+    background: rgba(88, 135, 149, 0.08);
+    border-radius: 8px;
+    border-left: 3px solid #588795;
+}
+
+.markdown-content .katex-display::-webkit-scrollbar {
+    height: 6px;
+}
+
+.markdown-content .katex-display::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+}
+
+.markdown-content .katex-display::-webkit-scrollbar-thumb {
+    background: #588795;
+    border-radius: 3px;
+}
+
+.markdown-content .katex-display::-webkit-scrollbar-thumb:hover {
+    background: #3b5316;
 }
 
 /* Responsive media queries */

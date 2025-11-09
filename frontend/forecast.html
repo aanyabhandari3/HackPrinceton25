@@ -12,6 +12,13 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     
+    <!-- Marked.js for Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- KaTeX for LaTeX Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +27,7 @@
     <!-- Custom Styles -->
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="forecast-page">
     <!-- Top Navigation Bar -->
     <nav class="navbar">
         <div class="navbar-brand">
@@ -40,10 +47,7 @@
         <p class="sidebar-subtitle">Configure impact visualization</p>
 
         <div class="section">
-            <div class="section-title">Location Controls</div>
-            <button class="control-btn primary-btn" onclick="centerOnLocation()">
-                Center on Data Center
-            </button>
+            <div class="section-title">Map Controls</div>
             <button class="control-btn secondary-btn" onclick="toggleHeatmap()">
                 Toggle Heatmap
             </button>
@@ -53,20 +57,59 @@
         </div>
 
         <div class="section">
-            <div class="section-title">Impact Zone</div>
-            <div class="info-row">
-                <span>Radius:</span>
-                <strong>~5 miles</strong>
-            </div>
-            <div class="info-row">
-                <span>Impact Level:</span>
-                <strong id="impact-level" class="impact-badge">Not Set</strong>
+            <div class="section-title">Impact Legend</div>
+            <div class="legend-container-compact">
+                <div class="legend-item-compact">
+                    <span class="legend-color-compact" style="background: rgba(178,24,43,1);"></span>
+                    <span class="legend-label-compact">Very High</span>
+                </div>
+                <div class="legend-item-compact">
+                    <span class="legend-color-compact" style="background: rgba(239,138,98,1);"></span>
+                    <span class="legend-label-compact">High</span>
+                </div>
+                <div class="legend-item-compact">
+                    <span class="legend-color-compact" style="background: rgba(253,219,199,1);"></span>
+                    <span class="legend-label-compact">Medium</span>
+                </div>
+                <div class="legend-item-compact">
+                    <span class="legend-color-compact" style="background: rgba(209,229,240,1);"></span>
+                    <span class="legend-label-compact">Low</span>
+                </div>
+                <div class="legend-item-compact">
+                    <span class="legend-color-compact" style="background: rgba(103,169,207,1);"></span>
+                    <span class="legend-label-compact">Minimal</span>
+                </div>
             </div>
         </div>
 
-        <div class="info-box">
-            <strong>About This Map</strong>
-            <p>Click on the map to place a data center and visualize its environmental impact zone. The heatmap shows a ~5 mile radius of influence.</p>
+        <div class="section">
+            <div class="section-title">Heatmap Details</div>
+            <div class="heatmap-info">
+                <div class="info-row">
+                    <span class="info-label">Impact Radius:</span>
+                    <span class="info-value" id="heatmap-radius">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Wind Speed:</span>
+                    <span class="info-value" id="heatmap-wind">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Wind Direction:</span>
+                    <span class="info-value" id="heatmap-wind-dir">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Temperature:</span>
+                    <span class="info-value" id="heatmap-temp">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Current PUE:</span>
+                    <span class="info-value" id="heatmap-pue">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Dispersion:</span>
+                    <span class="info-value" id="heatmap-dispersion">-</span>
+                </div>
+            </div>
         </div>
         </div>
 
@@ -78,54 +121,172 @@
             </div>
         </div>
 
-        <!-- Right Sidebar - Legend & Info -->
+        <!-- Right Sidebar - Simulation Results -->
         <div class="right-sidebar" id="right-sidebar">
             <div class="resize-handle" id="resize-handle"></div>
             
             <div class="sidebar-content">
-                <h2 class="sidebar-title">Impact Legend</h2>
-                <p class="sidebar-subtitle">Heatmap color guide</p>
+                <h2 class="sidebar-title">Forecast Results</h2>
+                <p class="sidebar-subtitle">Real-time simulation insights</p>
 
-                <div class="legend-container">
-                    <div class="legend">
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: rgba(178,24,43,1);"></span>
-                        <span>Very High Impact</span>
+                <div id="forecast-results-container" class="results-container">
+                    <div class="forecast-start-state" id="forecast-start-state">
+                        <p style="margin-bottom: 16px;">Ready to run annual simulation</p>
+                        <button id="start-forecast-btn" class="analyze-btn" onclick="startForecast()">
+                            Start Forecast
+                        </button>
                     </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: rgba(239,138,98,1);"></span>
-                        <span>High Impact</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: rgba(253,219,199,1);"></span>
-                        <span>Medium Impact</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: rgba(209,229,240,1);"></span>
-                        <span>Low Impact</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: rgba(103,169,207,1);"></span>
-                        <span>Minimal Impact</span>
+                    
+                    <!-- Timeline container (hidden initially) -->
+                    <div id="timeline-container" class="timeline-container" style="display: none;">
+                        <div class="timeline-header">
+                            <h3 class="timeline-title">Building the Year</h3>
+                            <div class="timeline-stats">
+                                <span id="days-completed">Day 0/365</span>
+                                <span id="simulation-progress">0%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-track">
+                            <canvas id="timeline-canvas" width="800" height="100"></canvas>
+                        </div>
+                        
+                        <div class="timeline-metrics">
+                            <div class="metric-box">
+                                <div class="metric-label">Avg Power</div>
+                                <div class="metric-value" id="metric-power">- kW</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">Avg PUE</div>
+                                <div class="metric-value" id="metric-pue">-</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">Utilization</div>
+                                <div class="metric-value" id="metric-util">- %</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Digital Odometer -->
+                        <div class="odometer-container">
+                            <h3 class="odometer-title">Accumulating Totals</h3>
+                            <div class="odometer-grid">
+                                <div class="odometer-card">
+                                    <div class="odometer-label">Energy Consumed</div>
+                                    <div class="odometer-display">
+                                        <span id="odometer-energy" class="odometer-value">0</span>
+                                        <span class="odometer-unit">kWh</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="odometer-card">
+                                    <div class="odometer-label">CO₂ Emitted</div>
+                                    <div class="odometer-display">
+                                        <span id="odometer-carbon" class="odometer-value">0</span>
+                                        <span class="odometer-unit">tons</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="odometer-card odometer-card-full">
+                                    <div class="odometer-label">Energy Cost</div>
+                                    <div class="odometer-display">
+                                        <span class="odometer-currency">$</span>
+                                        <span id="odometer-cost" class="odometer-value">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Human Cost Section -->
+                        <div class="human-cost-container">
+                            <h3 class="human-cost-title">Human Impact</h3>
+                            
+                            <div class="human-cost-item">
+                                <div class="human-cost-text">
+                                    <span class="human-cost-label">Equivalent to powering</span>
+                                    <div class="human-cost-value-row">
+                                        <span id="human-homes-count" class="human-cost-number">0</span>
+                                        <span class="human-cost-unit">homes for a year</span>
+                                    </div>
+                                </div>
+                                <div class="human-cost-visual">
+                                    <svg class="impact-icon" viewBox="0 0 100 100" id="homes-visual">
+                                        <rect x="20" y="40" width="60" height="50" fill="currentColor" opacity="0.2"/>
+                                        <polygon points="50,15 10,40 20,40 20,45 80,45 80,40 90,40" fill="currentColor" opacity="0.3"/>
+                                        <rect x="35" y="60" width="15" height="25" fill="currentColor" opacity="0.4"/>
+                                        <rect x="55" y="55" width="15" height="15" fill="currentColor" opacity="0.4"/>
+                                    </svg>
+                                    <div class="impact-bar" id="homes-bar"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="human-cost-item">
+                                <div class="human-cost-text">
+                                    <span class="human-cost-label">Requires</span>
+                                    <div class="human-cost-value-row">
+                                        <span id="trees-count" class="human-cost-number">0</span>
+                                        <span class="human-cost-unit">trees to offset carbon</span>
+                                    </div>
+                                </div>
+                                <div class="human-cost-visual">
+                                    <svg class="impact-icon" viewBox="0 0 100 100" id="trees-visual">
+                                        <circle cx="50" cy="35" r="25" fill="currentColor" opacity="0.2"/>
+                                        <circle cx="35" cy="40" r="18" fill="currentColor" opacity="0.25"/>
+                                        <circle cx="65" cy="40" r="18" fill="currentColor" opacity="0.25"/>
+                                        <rect x="45" y="55" width="10" height="35" fill="currentColor" opacity="0.4"/>
+                                    </svg>
+                                    <div class="impact-bar" id="trees-bar"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="human-cost-item human-cost-highlight">
+                                <div class="human-cost-text">
+                                    <span class="human-cost-label">Community burden:</span>
+                                    <div class="human-cost-value-row">
+                                        <span id="families-count" class="human-cost-number">0</span>
+                                        <span class="human-cost-unit">families pay</span>
+                                        <span id="family-cost" class="human-cost-number">$0.00</span>
+                                        <span class="human-cost-unit">more/month</span>
+                                    </div>
+                                </div>
+                                <div class="human-cost-visual">
+                                    <svg class="impact-icon" viewBox="0 0 100 100" id="families-visual">
+                                        <circle cx="35" cy="30" r="12" fill="currentColor" opacity="0.3"/>
+                                        <circle cx="65" cy="30" r="12" fill="currentColor" opacity="0.3"/>
+                                        <circle cx="30" cy="60" r="8" fill="currentColor" opacity="0.25"/>
+                                        <circle cx="50" cy="60" r="8" fill="currentColor" opacity="0.25"/>
+                                        <circle cx="70" cy="60" r="8" fill="currentColor" opacity="0.25"/>
+                                        <path d="M 35 42 Q 50 50 65 42" stroke="currentColor" fill="none" stroke-width="3" opacity="0.3"/>
+                                    </svg>
+                                    <div class="impact-bar" id="families-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="simulation-status" class="simulation-status"></div>
+                        
+                        <!-- LLM Report Section -->
+                        <div id="llm-report-section" class="llm-report-section" style="display: none;">
+                            <div class="report-header" onclick="toggleReport()">
+                                <div class="report-header-left">
+                                    <svg class="report-chevron" id="report-chevron" viewBox="0 0 24 24" width="20" height="20">
+                                        <path fill="currentColor" d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/>
+                                    </svg>
+                                    <h3 class="report-title">AI Impact Analysis Report</h3>
+                                    <span class="report-badge">Generated</span>
+                                </div>
+                                <button class="report-download-btn" onclick="downloadReportPDF(event)" title="Download PDF">
+                                    <svg viewBox="0 0 24 24" width="18" height="18">
+                                        <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M10,19L12,15H9V10H15V15L13,19H10Z"/>
+                                    </svg>
+                                    Download PDF
+                                </button>
+                            </div>
+                            <div id="report-content" class="report-content">
+                                <div class="markdown-content" id="report-markdown"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="info-section">
-                <div class="section-title">Environmental Factors</div>
-                <ul class="factor-list">
-                    <li>Local climate conditions</li>
-                    <li>Energy grid capacity</li>
-                    <li>Water resource availability</li>
-                    <li>Population density</li>
-                    <li>Ecosystem sensitivity</li>
-                </ul>
-            </div>
-
-            <div class="info-box">
-                <strong>Heatmap Details</strong>
-                <p>The intensity and spread of the heatmap indicate the severity and reach of environmental impacts. Red zones represent areas of highest concern, while blue zones show minimal impact.</p>
-            </div>
             </div>
         </div>
     </div>

@@ -227,9 +227,9 @@ class DataCenterApp {
             this.markdownBuffer = this.markdownBuffer || '';
             this.markdownBuffer += data.text;
             
-            // Parse and render markdown
+            // Parse and render markdown with LaTeX support
             if (typeof marked !== 'undefined') {
-                analysisDiv.innerHTML = marked.parse(this.markdownBuffer);
+                analysisDiv.innerHTML = this.renderMarkdownWithLatex(this.markdownBuffer);
             } else {
                 // Fallback to plain text if marked is not loaded
                 analysisDiv.textContent = this.markdownBuffer;
