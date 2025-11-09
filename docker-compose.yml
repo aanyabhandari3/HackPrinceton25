@@ -1,0 +1,24 @@
+services:
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: datacenter-frontend
+    ports:
+      - "3000:80"
+    environment:
+      # Set this to your backend URL
+      # Examples:
+      #   - http://your-backend-host:5000
+      #   - https://api.yourdomain.com
+      #   - http://10.0.0.5:5000
+      - BACKEND_URL=${BACKEND_URL:-http://localhost:5000}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/index.html"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+

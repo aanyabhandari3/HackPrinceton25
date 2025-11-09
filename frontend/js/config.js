@@ -45,8 +45,20 @@ export const DATA_CENTER_TYPES = {
 };
 
 // API Configuration
+// Use relative URLs in production (nginx will proxy), absolute in development
+const getApiBaseUrl = () => {
+    // Check if running in production (served via nginx)
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        // Production: use relative URLs (nginx proxy handles it)
+        return '';
+    }
+    
+    // Development: use environment variable or default to localhost
+    return import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+};
+
 export const API_CONFIG = {
-    baseUrl: 'http://127.0.0.1:5000',
+    baseUrl: getApiBaseUrl(),
     endpoints: {
         analyze: '/api/analyze/stream',
         dataCenterTypes: '/api/datacenter-types'
