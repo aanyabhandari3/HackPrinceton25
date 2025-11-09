@@ -7,7 +7,7 @@ import requests
 from datetime import datetime
 import googlemaps
 
-load_dotenv()
+load_dotenv('config.env')
 
 app = Flask(__name__)
 CORS(app)

@@ -12,7 +12,7 @@ export class APIClient {
             const payload = {
                 latitude: location.lat,
                 longitude: location.lng,
-                ...config
+                // ...config
             };
 
             const response = await fetch(`${this.baseUrl}${API_CONFIG.endpoints.analyze}`, {
