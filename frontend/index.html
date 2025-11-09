@@ -1,15 +1,150 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Data Center Impact Analyzer</title>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolv</title>
+    
+    <!-- Mapbox GL JS -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <img src="logo.png" alt="Evolv" class="logo-full">
+        </div>
+        <div class="navbar-links">
+            <a href="index.html" class="nav-link active">Analysis</a>
+            <a href="forecast.html" class="nav-link">Forecast</a>
+        </div>
+    </nav>
 
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Left Sidebar - Configuration -->
+        <div class="left-sidebar">
+        <h2 class="sidebar-title">Configuration</h2>
+        <p class="sidebar-subtitle">Customize data center specifications</p>
+
+        <!-- Data Center Size Presets -->
+        <div class="section">
+            <div class="section-title">Select Size Preset</div>
+            <div class="preset-grid">
+                <button class="preset-btn active" data-size="small">
+                    <span class="name">Small</span>
+                    <span class="power">1 MW • 100 servers</span>
+                </button>
+                <button class="preset-btn" data-size="medium">
+                    <span class="name">Medium</span>
+                    <span class="power">10 MW • 1,000 servers</span>
+                </button>
+                <button class="preset-btn" data-size="large">
+                    <span class="name">Large</span>
+                    <span class="power">50 MW • 10,000 servers</span>
+                </button>
+                <button class="preset-btn" data-size="mega">
+                    <span class="name">Mega</span>
+                    <span class="power">150 MW • 50,000 servers</span>
+                </button>
+            </div>
+
+            <button class="toggle-custom" onclick="toggleCustom()">
+                Custom Configuration
+            </button>
+
+            <!-- Custom Configuration Form -->
+            <div id="custom-config" class="custom-config">
+                <div class="form-group">
+                    <label>Power (MW)</label>
+                    <input type="number" id="power_mw" value="1" min="0.1" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Number of Servers</label>
+                    <input type="number" id="servers" value="100" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Size (sq ft)</label>
+                    <input type="number" id="square_feet" value="5000" min="100">
+                </div>
+                <div class="form-group">
+                    <label>Water Usage (gal/day)</label>
+                    <input type="number" id="water" value="25000" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Employees</label>
+                    <input type="number" id="employees" value="10" min="1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Info -->
+        <div id="location-display" style="display: none;" class="location-info">
+            <strong>Selected Location</strong><br>
+            Lat: <span id="lat">-</span>, Lng: <span id="lng">-</span>
+        </div>
+
+        <!-- Action Buttons -->
+        <button id="analyze-btn" class="analyze-btn" disabled onclick="analyzeImpact()">
+            Analyze Impact
+        </button>
+        <button class="reset-btn" onclick="resetMap()">
+            Reset Map
+        </button>
+        </div>
+
+        <!-- Center - Map Container -->
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="map-instructions">
+                Click on the map to place a data center
+            </div>
+        </div>
+
+        <!-- Right Sidebar - Results -->
+        <div class="right-sidebar">
+            <h2 class="sidebar-title">Analysis Results</h2>
+            <p class="sidebar-subtitle">Environmental impact summary</p>
+
+            <div id="results-container" class="results-container">
+                <div class="empty-state">
+                    <p>Click "Analyze Impact" to see results</p>
+                </div>
+            </div>
+
+            <!-- Current Specs Summary -->
+            <div id="specs-summary" class="specs-summary">
+                <div class="section-title">Current Configuration</div>
+                <div class="spec-row">
+                    <span>Power:</span>
+                    <strong><span id="spec-power">1</span> MW</strong>
+                </div>
+                <div class="spec-row">
+                    <span>Servers:</span>
+                    <strong><span id="spec-servers">100</span></strong>
+                </div>
+                <div class="spec-row">
+                    <span>Size:</span>
+                    <strong><span id="spec-size">5,000</span> sq ft</strong>
+                </div>
+                <div class="spec-row">
+                    <span>Water:</span>
+                    <strong><span id="spec-water">25</span>k gal/day</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Scripts -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

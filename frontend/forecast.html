@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate Impact Forecast - Data Center Analyzer</title>
+    
+    <!-- Mapbox GL JS v3.17.0-beta.1 -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="forecast-styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <div class="nav-content">
+            <h2 class="nav-title">📊 Climate Impact Forecast</h2>
+            <a href="index.html" class="nav-link">← Back to Analyzer</a>
+        </div>
+    </nav>
+
+    <!-- Map Container -->
+    <div id="forecast-map"></div>
+    
+    <!-- Info Panel -->
+    <div class="forecast-sidebar">
+        <h1>🌡️ Climate Impact Heatmap</h1>
+        <p class="subtitle">Visualizing environmental impact zones</p>
+
+        <div class="info-section">
+            <div class="section-title">Impact Zone</div>
+            <div class="info-row">
+                <span>Radius:</span>
+                <strong>~5 miles</strong>
+            </div>
+            <div class="info-row">
+                <span>Impact Level:</span>
+                <strong id="impact-level">Loading...</strong>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="section-title">Heat Map Legend</div>
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="legend-color" style="background: rgba(178,24,43,1);"></span>
+                    <span>Very High Impact</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: rgba(239,138,98,1);"></span>
+                    <span>High Impact</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: rgba(253,219,199,1);"></span>
+                    <span>Medium Impact</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: rgba(209,229,240,1);"></span>
+                    <span>Low Impact</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: rgba(103,169,207,1);"></span>
+                    <span>Minimal Impact</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="section-title">Location Controls</div>
+            <button class="control-btn" onclick="centerOnLocation()">
+                📍 Center on Data Center
+            </button>
+            <button class="control-btn" onclick="toggleHeatmap()">
+                🔄 Toggle Heatmap
+            </button>
+        </div>
+
+        <div class="info-section info-box">
+            <strong>ℹ️ About This Visualization</strong>
+            <p>This heatmap shows the projected environmental impact zone of a data center. The circular pattern represents a ~5 mile radius of influence, with color intensity indicating severity of impact on local climate, energy grid, and water resources.</p>
+        </div>
+    </div>
+
+    <!-- Instructions Panel -->
+    <div class="forecast-instructions">
+        💡 Click on the map to place a data center and see its impact zone
+    </div>
+
+    <!-- Application Script -->
+    <script type="module" src="js/forecast.js"></script>
+</body>
+</html>
+

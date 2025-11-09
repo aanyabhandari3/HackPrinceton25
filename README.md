@@ -1,20 +1,6 @@
-# 🌐 Data Center Impact Analyzer
+# EVOLV - *Dive Deep. See Clear.*
 
-A comprehensive web application that analyzes the environmental and economic impact of data centers across the United States. Place a data center anywhere on the map, customize its specifications, and receive detailed AI-powered impact reports.
-
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
-![React](https://img.shields.io/badge/react-18.3-blue.svg)
-
-## 🎯 Purpose
-
-As data center construction accelerates across the USA, understanding their impact on local communities becomes crucial. This tool helps visualize and quantify:
-
-- **Energy Consumption** - How much power will be consumed and impact on electricity bills
-- **Carbon Emissions** - Environmental footprint in tons of CO₂
-- **Water Usage** - Daily/annual water consumption and strain on local resources
-- **Economic Impact** - Job creation, construction costs, and community benefits
-- **Infrastructure Strain** - Impact on local utilities and resources
+Analyze the environmental and economic impact of data centers across the United States. Place a data center anywhere on the map, customize its specifications, and receive detailed AI-powered impact reports.
 
 ## ✨ Features
 
@@ -126,103 +112,144 @@ Powered by Claude (Anthropic), the app generates detailed analysis including:
 ### Prerequisites
 - Python 3.9+
 - Node.js 16+
-- npm or yarn
+- API Keys (free tiers available):
+  - [Mapbox](https://account.mapbox.com/access-tokens/)
+  - [Anthropic Claude](https://console.anthropic.com/)
+  - [US Census Bureau](https://api.census.gov/data/key_signup.html)
+  - [EIA](https://www.eia.gov/opendata/register.php)
+  - [OpenWeatherMap](https://openweathermap.org/api)
+
+### Frontend Setup
+
+1. **Install dependencies:**
+```bash
+cd frontend
+npm install
+```
+
+2. **Configure Mapbox token:**
+
+Edit `frontend/js/config.js` and replace the Mapbox token:
+```javascript
+export const MAPBOX_CONFIG = {
+    accessToken: 'YOUR_MAPBOX_TOKEN_HERE',
+    // ...
+};
+```
+
+3. **Start the frontend:**
+```bash
+npm start
+```
+
+Visit: **http://localhost:3000**
 
 ### Backend Setup
 
-1. Navigate to the backend directory:
+1. **Install dependencies:**
 ```bash
 cd backend
-```
-
-2. Install Python dependencies:
-```bash
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file with your API keys:
+2. **Create `.env` file:**
 ```bash
-ANTHROPIC_API_KEY=your_key_here
-MAPBOX_TOKEN=your_token_here
-CENSUS_API_KEY=your_key_here
-EIA_API_KEY=your_key_here
-OPENWEATHER_API_KEY=your_key_here
+# backend/.env
+ANTHROPIC_API_KEY=your_anthropic_key
+MAPBOX_TOKEN=your_mapbox_token
+CENSUS_API_KEY=your_census_key
+EIA_API_KEY=your_eia_key
+OPENWEATHER_API_KEY=your_openweather_key
 ```
 
-4. Run the Flask server:
+3. **Start the backend:**
 ```bash
 python app.py
 ```
 
-Backend will be available at `http://localhost:5000`
+Backend runs on: **http://localhost:5000**
 
-### Frontend Setup
+## 📁 Project Structure
 
-1. Navigate to the frontend directory:
-```bash
-cd frontend
 ```
-
-2. Install dependencies:
-```bash
-npm install
+HackPrinceton25/
+├── frontend/
+│   ├── index.html          # Main HTML
+│   ├── styles.css          # All CSS styles
+│   ├── js/
+│   │   ├── app.js         # Main application
+│   │   ├── config.js      # Configuration
+│   │   ├── map.js         # Map functionality
+│   │   ├── ui.js          # UI management
+│   │   └── api.js         # Backend API calls
+│   ├── package.json
+│   └── vite.config.js
+├── backend/
+│   ├── app.py             # Flask server + API
+│   └── requirements.txt
+├── README.md
+└── LICENSE
 ```
-
-3. Create a `.env` file:
-```bash
-VITE_MAPBOX_TOKEN=your_mapbox_token_here
-```
-
-4. Run the development server:
-```bash
-npm run dev
-```
-
-Frontend will be available at `http://localhost:3000`
 
 ## 🎮 Usage
 
-1. **Select a Location**: Click anywhere on the map to place your data center
-2. **Configure**: Choose a preset size or create a custom configuration
-3. **Analyze**: Click "Analyze Impact" to generate the report
-4. **Review**: Examine the detailed metrics and AI-generated insights
-5. **Reset**: Start over with a new location or configuration
+1. **Open the app** at http://localhost:3000
+2. **Select a data center size** or customize your own
+3. **Click on the map** to place the data center
+4. **Click "Analyze Impact"** to generate the report
+5. **View results** with AI-powered insights
 
-## 📊 Example Analysis
+## 📊 What Gets Analyzed
 
-When you place a Medium (10 MW) data center in a typical US county:
+### Energy Impact
+- Annual consumption (MWh)
+- Regional demand increase (%)
+- Cost per household
+- Equivalent homes powered
 
-- **Energy**: ~87,600 MWh/year (~0.5-2% regional increase)
-- **Carbon**: ~40,000 tons CO₂/year (equivalent to ~8,700 cars)
-- **Water**: ~110M gallons/year (~0.2-1% regional increase)
-- **Economic**: 50 jobs, $50M construction, ~$13M annual operating cost
+### Carbon Footprint
+- Annual CO₂ emissions (tons)
+- Equivalent cars on the road
+- Environmental comparisons
 
-## 🔒 Privacy & Data
+### Water Resources
+- Daily/annual usage (gallons)
+- Regional water strain (%)
+- Olympic pool equivalents
 
-- No user data is stored
-- All calculations happen in real-time
-- API calls are made directly to public data sources
-- No tracking or analytics beyond basic API usage
+### Economic Impact
+- Jobs created
+- Construction costs
+- Annual operating costs
 
-## 🛠️ Tech Stack Summary
-
-**Backend:**
-- Flask 3.0
-- Anthropic Claude API
-- Requests
-- Python-dotenv
+## 🛠️ Tech Stack
 
 **Frontend:**
-- React 18
+- Pure JavaScript (ES6 modules)
 - Mapbox GL JS
-- Tailwind CSS
-- Vite
-- Axios
+- Vite dev server
+
+**Backend:**
+- Python Flask
+- Anthropic Claude API
+- Multiple data APIs (Census, EIA, OpenWeather)
+
+## 💰 API Costs
+
+All APIs have generous free tiers:
+
+| API | Free Tier | Est. Monthly Cost |
+|-----|-----------|-------------------|
+| Mapbox | 50k loads/month | Free |
+| Census | Unlimited | Free |
+| EIA | Unlimited | Free |
+| OpenWeatherMap | 60 calls/min | Free |
+| Anthropic | Pay-as-you-go | ~$0.30/month (100 analyses) |
 
 ## 📝 API Endpoints
 
-### `POST /api/analyze`
-Analyze data center impact at a location
+### POST `/api/analyze`
+Analyze data center impact at a location.
 
 **Request:**
 ```json
@@ -234,49 +261,45 @@ Analyze data center impact at a location
 }
 ```
 
-**Response:**
-```json
-{
-  "timestamp": "2025-11-08T12:00:00",
-  "location": { ... },
-  "datacenter": { ... },
-  "impact": {
-    "energy": { ... },
-    "carbon": { ... },
-    "water": { ... },
-    "economic": { ... }
-  },
-  "analysis": "AI-generated comprehensive analysis..."
-}
+**Response:** Full impact report with AI analysis
+
+### GET `/api/datacenter-types`
+Get available data center presets.
+
+### GET `/health`
+Health check endpoint.
+
+## 🧪 Development
+
+**Frontend:**
+```bash
+cd frontend
+npm run dev    # Start dev server
+npm run build  # Build for production
 ```
 
-### `GET /api/datacenter-types`
-Get available data center presets
-
-### `GET /health`
-Health check endpoint
+**Backend:**
+```bash
+cd backend
+python app.py  # Start Flask server
+```
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Built for **HackPrinceton 2025**
+
+Feel free to open issues or submit PRs!
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License - see LICENSE file for details
 
 ## 🙏 Acknowledgments
 
-- Data sources: US Census Bureau, Energy Information Administration, USGS
+- Data sources: US Census Bureau, EIA, USGS
 - Mapping: Mapbox
 - AI Analysis: Anthropic Claude
-- Icons: Lucide React
-
-## 📧 Contact
-
-For questions or feedback, please open an issue on GitHub.
 
 ---
-
-**Built for HackPrinceton 2025** 🎓
 
 Made with ❤️ to promote awareness about data center environmental impacts
