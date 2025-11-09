@@ -1,6 +1,8 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
 import os
+import json
+import time
 from dotenv import load_dotenv
 import anthropic
 import requests
@@ -11,7 +13,6 @@ from services.simulate import (
     create_climate_data_from_api,
     create_datacenter_specs_from_config,
     create_grid_info_from_location,
-    PowerSimulationResult,
     GridImpactCalculator
 )
 
@@ -26,6 +27,9 @@ MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN')
 CENSUS_API_KEY = os.getenv('CENSUS_API_KEY')
 EIA_API_KEY = os.getenv('EIA_API_KEY')
 OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
+
+if not ANTHROPIC_API_KEY:
+    raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -457,7 +461,7 @@ Be specific, data-driven, and balanced (mention both concerns and benefits)."""
 
     try:
         message = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             max_tokens=2000,
             messages=[{
                 "role": "user",
@@ -472,6 +476,92 @@ Be specific, data-driven, and balanced (mention both concerns and benefits)."""
 
 
 # New
+def generate_llm_analysis_simulation(datacenter_config, location_data, climate_data, sim_result, grid_config, annual_cost, annual_co2_tons, state_name, region_code, lat, lon):
+    """Use Claude to generate comprehensive analysis for simulation results"""
+    
+    prompt = f"""You are an environmental impact analyst for data centers. Analyze the following data center simulation results:
+
+DATA CENTER SPECIFICATIONS:
+- Type: {datacenter_config['name']}
+- Power Capacity: {datacenter_config['power_mw']} MW
+- Number of Servers: {datacenter_config['servers']:,}
+- Size: {datacenter_config['square_feet']:,} square feet
+- Cooling Type: {datacenter_config.get('cooling_type', 'air_cooled').replace('_', ' ').title()}
+- Server Type: {datacenter_config.get('server_type', 'enterprise').replace('_', ' ').title()}
+- Data Center Type: {datacenter_config.get('datacenter_type', 'enterprise').replace('_', ' ').title()}
+- Employees: {datacenter_config['employees']}
+
+LOCATION DATA:
+- Coordinates: {lat}, {lon}
+- Location: {location_data.get('location_name', 'Unknown')}, {state_name}
+- Grid Region: {region_code}
+- Population: {location_data.get('population', 0):,}
+- Median Income: ${location_data.get('median_income', 0):,}
+
+CLIMATE DATA:
+- Temperature: {climate_data['temperature']}°F
+- Humidity: {climate_data['humidity']}%
+- Conditions: {climate_data['description']}
+
+SIMULATION RESULTS (8760-hour annual simulation):
+Energy Performance:
+- Peak Power: {sim_result.peak_power_kw:,.0f} kW
+- Average Power: {sim_result.average_power_kw:,.0f} kW
+- Annual Consumption: {sim_result.annual_consumption_mwh:,.0f} MWh
+- Annual Energy Cost: ${annual_cost:,.0f}
+- Average PUE: {np.mean(sim_result.hourly_pue):.2f}
+- Best PUE: {min(sim_result.hourly_pue):.2f}
+- Worst PUE: {max(sim_result.hourly_pue):.2f}
+
+Workload Characteristics:
+- Average Utilization: {np.mean(sim_result.hourly_utilization):.1f}%
+- Peak Utilization: {max(sim_result.hourly_utilization):.1f}%
+- Minimum Utilization: {min(sim_result.hourly_utilization):.1f}%
+
+Carbon Impact:
+- Annual CO2 Emissions: {annual_co2_tons:,.0f} tons
+- Grid Carbon Intensity: {grid_config['carbon_intensity']:.3f} kg CO₂/kWh
+- Equivalent to {annual_co2_tons / 4.6:,.0f} cars
+- Equivalent to power for {(sim_result.annual_consumption_mwh * 1000) / 10000:,.0f} homes
+
+Community & Grid Impact:
+- Peak Impact on Grid: {sim_result.community_impact['peak_impact_percent']:.2f}%
+- Average Impact on Grid: {sim_result.community_impact['average_impact_percent']:.2f}%
+- Grid Stability Risk: {sim_result.community_impact['stability_risk'].upper()}
+- Grid Impact Classification: {sim_result.community_impact['grid_classification'].upper()}
+- Monthly Cost Per Household: ${sim_result.community_impact['household_impact']['monthly_cost_per_household']:.2f}
+- Household Bill Increase: {sim_result.community_impact['household_impact']['percentage_increase']:.2f}%
+- Infrastructure Cost: ${sim_result.community_impact['infrastructure_cost']['total']:,.0f}
+- Infrastructure Required: {sim_result.community_impact['infrastructure_cost']['required']}
+
+Please provide a comprehensive analysis covering:
+1. **Overall Performance Assessment** - How well does this data center perform based on the simulation?
+2. **Energy Efficiency Analysis** - Assess PUE trends, cooling efficiency, and optimization opportunities
+3. **Grid & Community Impact** - Detailed analysis of impact on local grid and households
+4. **Workload Pattern Analysis** - What do the utilization patterns tell us about this facility?
+5. **Environmental Concerns** - Carbon footprint and environmental sustainability analysis
+6. **Infrastructure Requirements** - What grid infrastructure upgrades are needed?
+7. **Cost-Benefit Analysis** - Economic impacts (jobs, costs to community, energy costs)
+8. **Risk Assessment** - Grid stability risks, power supply concerns, regulatory challenges
+9. **Recommendations** - Specific mitigation strategies, optimization opportunities, and site suitability
+
+Be specific, data-driven, and balanced. Use the actual simulation data to support your analysis. Consider both technical performance and community impact."""
+
+    try:
+        message = client.messages.create(
+            model="claude-sonnet-4-5-20250929",
+            max_tokens=2500,
+            messages=[{
+                "role": "user",
+                "content": prompt
+            }]
+        )
+        
+        return message.content[0].text
+    except Exception as e:
+        return f"Error generating LLM analysis for simulation: {e}"
+
+
 def calculate_impact_with_simulation(datacenter_config, location_data, energy_data, climate_data):
     """Calculate impact using the sophisticated simulation models"""
     
@@ -658,6 +748,22 @@ def forecast_datacenter():
         sampled_utilization = [sim_result.hourly_utilization[i] for i in sampled_hours]
         sampled_pue = [sim_result.hourly_pue[i] for i in sampled_hours]
         
+        # Generate LLM analysis for simulation results
+        print("Generating AI analysis...")
+        llm_analysis = generate_llm_analysis_simulation(
+            datacenter_config,
+            location_data,
+            climate_data,
+            sim_result,
+            grid_config,
+            annual_cost,
+            annual_co2_tons,
+            state_name,
+            region_code,
+            lat,
+            lon
+        )
+        
         # Compile forecast report
         forecast_report = {
             'timestamp': datetime.utcnow().isoformat(),
@@ -712,8 +818,13 @@ def forecast_datacenter():
                 'grid_classification': sim_result.community_impact['grid_classification'],
                 'household_impact': sim_result.community_impact['household_impact'],
                 'infrastructure_cost': sim_result.community_impact['infrastructure_cost']
-            }
+            },
+            'analysis': llm_analysis
         }
+
+        # Write the forecast report to a file for later retrieval or debugging
+        with open("forecast_report.json", "w") as f:
+            json.dump(forecast_report, f, indent=2, default=str)
         
         return jsonify(forecast_report)
         
@@ -726,6 +837,319 @@ def forecast_datacenter():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/api/forecast/stream', methods=['POST'])
+def stream_forecast_datacenter():
+    """Forecast with real-time streaming updates"""
+    
+    # Extract ALL request data BEFORE generator
+    data = request.json
+    lat = data['latitude']
+    lon = data['longitude']
+    dc_size = data.get('size', 'medium')
+    simulation_hours = data.get('simulation_hours', 8760)
+    
+    # Custom configuration if provided
+    if 'custom' in data and data['custom']:
+        datacenter_config = {
+            'name': data.get('name', 'Custom Data Center'),
+            'power_mw': data.get('power_mw', 10),
+            'servers': data.get('servers', 1000),
+            'square_feet': data.get('square_feet', 50000),
+            'water_gallons_per_day': data.get('water_gallons_per_day', 300000),
+            'employees': data.get('employees', 50),
+            'cooling_type': data.get('cooling_type', 'air_cooled'),
+            'server_type': data.get('server_type', 'enterprise'),
+            'datacenter_type': data.get('datacenter_type', 'enterprise')
+        }
+    else:
+        datacenter_config = DATA_CENTER_TIERS.get(dc_size, DATA_CENTER_TIERS['medium'])
+    
+    def generate():
+        try:
+            last_heartbeat = time.time()
+            
+            # Step 1: Initial status
+            yield f"data: {json.dumps({'status': 'started', 'step': 'initializing'})}\n\n"
+            
+            # Step 2: Gather location data
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'fetching_location_data'})}\n\n"
+            location_data = get_population_data(lat, lon)
+            
+            # Step 3: Get grid and energy data
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'fetching_energy_data'})}\n\n"
+            state_fips = location_data.get('state_fips', '')
+            state_name = get_state_name_from_fips(state_fips)
+            region_code = map_state_to_grid_region(state_fips)
+            energy_data = get_energy_data(state_fips)
+            
+            # Step 4: Get climate data
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'fetching_climate_data'})}\n\n"
+            climate_data = get_climate_data(lat, lon)
+            
+            # Step 5: Prepare simulation
+            yield f"data: {json.dumps({'status': 'progress', 'step': 'preparing_simulation', 'hours': simulation_hours})}\n\n"
+            dc_specs = create_datacenter_specs_from_config(datacenter_config)
+            climate = create_climate_data_from_api(climate_data)
+            grid_info = create_grid_info_from_location(location_data, region_code)
+            
+            # Step 6: Run simulation with progress updates (inline loop for streaming)
+            yield f"data: {json.dumps({'status': 'simulating', 'hours_total': simulation_hours})}\n\n"
+            from services.simulate import (
+                ServerPowerModel, WorkloadSimulator, CoolingEfficiencyModel, 
+                GridImpactCalculator, PowerSimulationResult
+            )
+            from datetime import timedelta
+            
+            # Initialize models
+            server_model = ServerPowerModel(server_type=dc_specs.server_type)
+            workload_sim = WorkloadSimulator()
+            cooling_model = CoolingEfficiencyModel(cooling_type=dc_specs.cooling_type)
+            grid_calculator = GridImpactCalculator()
+            
+            hourly_power_kw = []
+            hourly_utilization = []
+            hourly_pue = []
+            start_date = datetime.now()
+            
+            # Run simulation with inline progress updates
+            for hour in range(simulation_hours):
+                current_time = start_date + timedelta(hours=hour)
+                day_of_week = current_time.weekday()
+                month = current_time.month
+                hour_of_day = current_time.hour
+                
+                # Get utilization
+                utilization = workload_sim.simulate_utilization(
+                    hour_of_day, day_of_week, dc_specs.datacenter_type, month
+                )
+                
+                # Calculate power
+                power_per_server_w = server_model.get_power_consumption(
+                    dc_specs.max_power_per_server, utilization
+                )
+                total_power_w = power_per_server_w * dc_specs.server_count
+                
+                # Calculate PUE
+                pue = cooling_model.calculate_pue(climate)
+                total_power_kw = (total_power_w / 1000) * pue
+                
+                hourly_power_kw.append(total_power_kw)
+                hourly_utilization.append(utilization)
+                hourly_pue.append(pue)
+                
+                # Yield progress every 24 hours
+                if (hour + 1) % 24 == 0:
+                    progress_update = {
+                        'status': 'simulation_progress',
+                        'hours_completed': hour + 1,
+                        'percent_complete': round(((hour + 1) / simulation_hours) * 100, 1),
+                        'current_avg_power_kw': round(float(np.mean(hourly_power_kw)), 2),
+                        'current_avg_utilization': round(float(np.mean(hourly_utilization)), 2),
+                        'current_avg_pue': round(float(np.mean(hourly_pue)), 3)
+                    }
+                    yield f"data: {json.dumps(progress_update)}\n\n"
+                    last_heartbeat = time.time()
+                
+                # Send heartbeat if needed (every 15 seconds)
+                if time.time() - last_heartbeat > 15:
+                    yield f"data: {json.dumps({'status': 'heartbeat'})}\n\n"
+                    last_heartbeat = time.time()
+            
+            # Calculate grid impact
+            community_impact = grid_calculator.calculate_grid_impact(
+                hourly_power_kw, grid_info
+            )
+            
+            # Build simulation result
+            sim_result = PowerSimulationResult(
+                hourly_power_kw=hourly_power_kw,
+                hourly_utilization=hourly_utilization,
+                hourly_pue=hourly_pue,
+                peak_power_kw=max(hourly_power_kw),
+                average_power_kw=np.mean(hourly_power_kw),
+                annual_consumption_mwh=sum(hourly_power_kw) / 1000,
+                community_impact=community_impact
+            )
+            
+            # Step 7: Calculate costs
+            yield f"data: {json.dumps({'status': 'calculating_costs'})}\n\n"
+            grid_config = grid_calculator.grid_regions.get(region_code, grid_calculator.grid_regions['DEFAULT'])
+            annual_kwh = sim_result.annual_consumption_mwh * 1000
+            annual_cost = annual_kwh * grid_config['base_rate']
+            annual_co2_kg = annual_kwh * grid_config['carbon_intensity']
+            annual_co2_tons = annual_co2_kg / 907.185
+            
+            # Step 8: Sample data for frontend
+            sampled_hours = list(range(0, len(sim_result.hourly_power_kw), 24))
+            sampled_power = [sim_result.hourly_power_kw[i] for i in sampled_hours]
+            sampled_utilization = [sim_result.hourly_utilization[i] for i in sampled_hours]
+            sampled_pue = [sim_result.hourly_pue[i] for i in sampled_hours]
+            
+            # Step 9: Generate AI analysis with streaming
+            yield f"data: {json.dumps({'status': 'generating_analysis'})}\n\n"
+            
+            # Build the prompt inline for streaming
+            prompt = f"""You are an environmental impact analyst for data centers. Analyze the following data center simulation results:
+
+DATA CENTER SPECIFICATIONS:
+- Type: {datacenter_config['name']}
+- Power Capacity: {datacenter_config['power_mw']} MW
+- Number of Servers: {datacenter_config['servers']:,}
+- Size: {datacenter_config['square_feet']:,} square feet
+- Cooling Type: {datacenter_config.get('cooling_type', 'air_cooled').replace('_', ' ').title()}
+- Server Type: {datacenter_config.get('server_type', 'enterprise').replace('_', ' ').title()}
+- Data Center Type: {datacenter_config.get('datacenter_type', 'enterprise').replace('_', ' ').title()}
+- Employees: {datacenter_config['employees']}
+
+LOCATION DATA:
+- Coordinates: {lat}, {lon}
+- Location: {location_data.get('location_name', 'Unknown')}, {state_name}
+- Grid Region: {region_code}
+- Population: {location_data.get('population', 0):,}
+- Median Income: ${location_data.get('median_income', 0):,}
+
+CLIMATE DATA:
+- Temperature: {climate_data['temperature']}°F
+- Humidity: {climate_data['humidity']}%
+- Conditions: {climate_data['description']}
+
+SIMULATION RESULTS (8760-hour annual simulation):
+Energy Performance:
+- Peak Power: {sim_result.peak_power_kw:,.0f} kW
+- Average Power: {sim_result.average_power_kw:,.0f} kW
+- Annual Consumption: {sim_result.annual_consumption_mwh:,.0f} MWh
+- Annual Energy Cost: ${annual_cost:,.0f}
+- Average PUE: {np.mean(sim_result.hourly_pue):.2f}
+- Best PUE: {min(sim_result.hourly_pue):.2f}
+- Worst PUE: {max(sim_result.hourly_pue):.2f}
+
+Workload Characteristics:
+- Average Utilization: {np.mean(sim_result.hourly_utilization):.1f}%
+- Peak Utilization: {max(sim_result.hourly_utilization):.1f}%
+- Minimum Utilization: {min(sim_result.hourly_utilization):.1f}%
+
+Carbon Impact:
+- Annual CO2 Emissions: {annual_co2_tons:,.0f} tons
+- Grid Carbon Intensity: {grid_config['carbon_intensity']:.3f} kg CO₂/kWh
+- Equivalent to {annual_co2_tons / 4.6:,.0f} cars
+- Equivalent to power for {(sim_result.annual_consumption_mwh * 1000) / 10000:,.0f} homes
+
+Community & Grid Impact:
+- Peak Impact on Grid: {sim_result.community_impact['peak_impact_percent']:.2f}%
+- Average Impact on Grid: {sim_result.community_impact['average_impact_percent']:.2f}%
+- Grid Stability Risk: {sim_result.community_impact['stability_risk'].upper()}
+- Grid Impact Classification: {sim_result.community_impact['grid_classification'].upper()}
+- Monthly Cost Per Household: ${sim_result.community_impact['household_impact']['monthly_cost_per_household']:.2f}
+- Household Bill Increase: {sim_result.community_impact['household_impact']['percentage_increase']:.2f}%
+- Infrastructure Required: {sim_result.community_impact['infrastructure_cost']['required']}
+
+Please provide a comprehensive analysis covering:
+1. **Overall Performance Assessment** - How well does this data center perform based on the simulation?
+2. **Energy Efficiency Analysis** - Assess PUE trends, cooling efficiency, and optimization opportunities
+3. **Grid & Community Impact** - Detailed analysis of impact on local grid and households
+4. **Workload Pattern Analysis** - What do the utilization patterns tell us about this facility?
+5. **Environmental Concerns** - Carbon footprint and environmental sustainability analysis
+6. **Infrastructure Requirements** - What grid infrastructure upgrades are needed?
+7. **Cost-Benefit Analysis** - Economic impacts (jobs, costs to community, energy costs)
+8. **Risk Assessment** - Grid stability risks, power supply concerns, regulatory challenges
+9. **Recommendations** - Specific mitigation strategies, optimization opportunities, and site suitability
+
+Be specific, data-driven, and balanced. Use the actual simulation data to support your analysis. Consider both technical performance and community impact."""
+
+            # Stream the LLM response
+            llm_analysis_chunks = []
+            try:
+                with client.messages.stream(
+                    model="claude-sonnet-4-5-20250929",
+                    max_tokens=2500,
+                    messages=[{"role": "user", "content": prompt}]
+                ) as stream:
+                    for text in stream.text_stream:
+                        llm_analysis_chunks.append(text)
+                        # Send each chunk as it arrives
+                        yield f"data: {json.dumps({'status': 'analysis_chunk', 'text': text})}\n\n"
+                
+                # Combine all chunks for final report
+                llm_analysis = ''.join(llm_analysis_chunks)
+                
+            except Exception as e:
+                llm_analysis = f"Error generating LLM analysis: {e}"
+                yield f"data: {json.dumps({'status': 'analysis_error', 'message': str(e)})}\n\n"
+            
+            # Step 10: Compile final report
+            forecast_report = {
+                'timestamp': datetime.utcnow().isoformat(),
+                'location': {
+                    'latitude': lat,
+                    'longitude': lon,
+                    'name': location_data.get('location_name', 'Unknown'),
+                    'state': state_name,
+                    'state_fips': state_fips,
+                    'grid_region': region_code,
+                    'population': location_data.get('population', 0),
+                    'median_income': location_data.get('median_income', 0)
+                },
+                'datacenter': datacenter_config,
+                'climate': climate_data,
+                'simulation': {
+                    'hours_simulated': simulation_hours,
+                    'peak_power_kw': sim_result.peak_power_kw,
+                    'average_power_kw': sim_result.average_power_kw,
+                    'annual_consumption_mwh': sim_result.annual_consumption_mwh,
+                    'average_utilization': float(np.mean(sim_result.hourly_utilization)),
+                    'peak_utilization': float(max(sim_result.hourly_utilization)),
+                    'average_pue': float(np.mean(sim_result.hourly_pue)),
+                    'best_pue': float(min(sim_result.hourly_pue)),
+                    'worst_pue': float(max(sim_result.hourly_pue)),
+                    'hourly_data': {
+                        'hours': sampled_hours,
+                        'power_kw': sampled_power,
+                        'utilization': sampled_utilization,
+                        'pue': sampled_pue
+                    }
+                },
+                'energy': {
+                    'annual_mwh': sim_result.annual_consumption_mwh,
+                    'annual_kwh': annual_kwh,
+                    'annual_cost': annual_cost,
+                    'grid_region': region_code,
+                    'base_rate': grid_config['base_rate'],
+                    'peak_multiplier': grid_config['peak_multiplier'],
+                    'percent_increase': sim_result.community_impact['average_impact_percent']
+                },
+                'carbon': {
+                    'annual_tons_co2': annual_co2_tons,
+                    'carbon_intensity_kg_kwh': grid_config['carbon_intensity'],
+                    'equivalent_cars': annual_co2_tons / 4.6,
+                    'equivalent_homes': annual_kwh / 10000
+                },
+                'community_impact': {
+                    'peak_impact_percent': sim_result.community_impact['peak_impact_percent'],
+                    'average_impact_percent': sim_result.community_impact['average_impact_percent'],
+                    'stability_risk': sim_result.community_impact['stability_risk'],
+                    'grid_classification': sim_result.community_impact['grid_classification'],
+                    'household_impact': sim_result.community_impact['household_impact'],
+                    'infrastructure_cost': sim_result.community_impact['infrastructure_cost']
+                },
+                'analysis': llm_analysis
+            }
+            
+            # Step 11: Send final complete report
+            yield f"data: {json.dumps({'status': 'complete', 'report': forecast_report})}\n\n"
+            
+        except Exception as e:
+            import traceback
+            error_detail = traceback.format_exc()
+            print(f"Stream error: {error_detail}")
+            yield f"data: {json.dumps({'status': 'error', 'message': str(e)})}\n\n"
+    
+    # Return streaming response
+    response = Response(stream_with_context(generate()), mimetype='text/event-stream')
+    response.headers['Cache-Control'] = 'no-cache'
+    response.headers['X-Accel-Buffering'] = 'no'  # Disable nginx buffering
+    response.headers['Access-Control-Allow-Origin'] = '*'  # Adjust for production
+    return response
 
 @app.route('/api/datacenter-types', methods=['GET'])
 def get_datacenter_types():

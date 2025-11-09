@@ -423,6 +423,12 @@ class GridImpactCalculator:
         # Calculate peak impact
         datacenter_peak_mw = max(datacenter_power_mw)
         baseline_peak_mw = grid_info.baseline_demand_mw
+        
+        # Safeguard against division by zero
+        if baseline_peak_mw <= 0:
+            baseline_peak_mw = 100  # Default minimum grid capacity of 100 MW
+            print(f"Warning: baseline_demand_mw was {grid_info.baseline_demand_mw}, using default 100 MW")
+        
         new_peak_mw = baseline_peak_mw + datacenter_peak_mw
         
         # Grid impact percentages
@@ -507,8 +513,13 @@ class GridImpactCalculator:
         # Amortize infrastructure cost over 15 years
         annual_infrastructure_cost = infrastructure_cost["total"] / 15
         
+        # Safeguard against division by zero
+        total_households = grid_info.total_households if grid_info.total_households > 0 else 40000
+        if grid_info.total_households <= 0:
+            print(f"Warning: total_households was {grid_info.total_households}, using default 40,000")
+        
         # Distribute cost across households
-        annual_cost_per_household = annual_infrastructure_cost / grid_info.total_households
+        annual_cost_per_household = annual_infrastructure_cost / total_households
         monthly_cost_per_household = annual_cost_per_household / 12
         
         # Calculate percentage increase
@@ -535,15 +546,12 @@ class GridImpactCalculator:
             return "critical"
 
 
-
-
-
-
 def run_full_simulation(
     datacenter_specs: DataCenterSpecs,
     climate_data: ClimateData,
     grid_info: GridInfo,
-    simulation_hours: int = 8760  # 1 year
+    simulation_hours: int = 8760,  # 1 year
+    progress_callback = None
 ) -> PowerSimulationResult:
   
     # Initialize models
@@ -585,6 +593,17 @@ def run_full_simulation(
         hourly_power_kw.append(total_power_kw)
         hourly_utilization.append(utilization)
         hourly_pue.append(pue)
+
+
+        if progress_callback and (hour + 1) % 24 == 0:
+            progress_callback({
+                'hours_completed': hour + 1,
+                'percent_complete': ((hour + 1) / simulation_hours) * 100,
+                'current_avg_power_kw': float(np.mean(hourly_power_kw)),
+                'current_avg_utilization': float(np.mean(hourly_utilization)),
+                'current_avg_pue': float(np.mean(hourly_pue))
+            })
+
     
     # Calculate grid impact
     community_impact = grid_calculator.calculate_grid_impact(
@@ -641,6 +660,12 @@ def create_datacenter_specs_from_config(config: dict) -> DataCenterSpecs:
 def create_grid_info_from_location(location_data: dict, region_code: str = "DEFAULT") -> GridInfo:
     """Convert location data to GridInfo"""
     population = location_data.get('population', 100000)
+    
+    # Ensure minimum population to avoid division by zero
+    if population < 1000:
+        print(f"Warning: Population ({population}) is too low, using default of 100,000")
+        population = 100000
+    
     households = int(population / 2.5)
     
     # Estimate baseline demand (rough: 1-2 kW avg per household)
