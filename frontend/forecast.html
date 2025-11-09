@@ -3,34 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Climate Impact Forecast - Data Center Analyzer</title>
+    <title>Climate Impact Forecast - Evolv</title>
     
     <!-- Mapbox GL JS v3.17.0-beta.1 -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js"></script>
     
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
     <!-- Custom Styles -->
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="forecast-styles.css">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="nav-bar">
-        <div class="nav-content">
-            <h2 class="nav-title">📊 Climate Impact Forecast</h2>
-            <a href="index.html" class="nav-link">← Back to Analyzer</a>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <img src="logo.png" alt="Evolv" class="logo-full">
+        </div>
+        <div class="navbar-links">
+            <a href="index.html" class="nav-link">Analysis</a>
+            <a href="forecast.html" class="nav-link active">Forecast</a>
         </div>
     </nav>
 
-    <!-- Map Container -->
-    <div id="forecast-map"></div>
-    
-    <!-- Info Panel -->
-    <div class="forecast-sidebar">
-        <h1>🌡️ Climate Impact Heatmap</h1>
-        <p class="subtitle">Visualizing environmental impact zones</p>
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Left Sidebar - Controls -->
+        <div class="left-sidebar">
+        <h2 class="sidebar-title">Heatmap Controls</h2>
+        <p class="sidebar-subtitle">Configure impact visualization</p>
 
-        <div class="info-section">
+        <div class="section">
+            <div class="section-title">Location Controls</div>
+            <button class="control-btn primary-btn" onclick="centerOnLocation()">
+                Center on Data Center
+            </button>
+            <button class="control-btn secondary-btn" onclick="toggleHeatmap()">
+                Toggle Heatmap
+            </button>
+            <button class="control-btn secondary-btn" onclick="resetMap()">
+                Reset Map
+            </button>
+        </div>
+
+        <div class="section">
             <div class="section-title">Impact Zone</div>
             <div class="info-row">
                 <span>Radius:</span>
@@ -38,59 +60,122 @@
             </div>
             <div class="info-row">
                 <span>Impact Level:</span>
-                <strong id="impact-level">Loading...</strong>
+                <strong id="impact-level" class="impact-badge">Not Set</strong>
             </div>
         </div>
 
-        <div class="info-section">
-            <div class="section-title">Heat Map Legend</div>
-            <div class="legend">
-                <div class="legend-item">
-                    <span class="legend-color" style="background: rgba(178,24,43,1);"></span>
-                    <span>Very High Impact</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-color" style="background: rgba(239,138,98,1);"></span>
-                    <span>High Impact</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-color" style="background: rgba(253,219,199,1);"></span>
-                    <span>Medium Impact</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-color" style="background: rgba(209,229,240,1);"></span>
-                    <span>Low Impact</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-color" style="background: rgba(103,169,207,1);"></span>
-                    <span>Minimal Impact</span>
-                </div>
+        <div class="info-box">
+            <strong>About This Map</strong>
+            <p>Click on the map to place a data center and visualize its environmental impact zone. The heatmap shows a ~5 mile radius of influence.</p>
+        </div>
+        </div>
+
+        <!-- Center - Map Container -->
+        <div class="map-container">
+            <div id="forecast-map"></div>
+            <div class="map-instructions">
+                Click on the map to place a data center and see its impact zone
             </div>
         </div>
 
-        <div class="info-section">
-            <div class="section-title">Location Controls</div>
-            <button class="control-btn" onclick="centerOnLocation()">
-                📍 Center on Data Center
-            </button>
-            <button class="control-btn" onclick="toggleHeatmap()">
-                🔄 Toggle Heatmap
-            </button>
-        </div>
+        <!-- Right Sidebar - Legend & Info -->
+        <div class="right-sidebar" id="right-sidebar">
+            <div class="resize-handle" id="resize-handle"></div>
+            
+            <div class="sidebar-content">
+                <h2 class="sidebar-title">Impact Legend</h2>
+                <p class="sidebar-subtitle">Heatmap color guide</p>
 
-        <div class="info-section info-box">
-            <strong>ℹ️ About This Visualization</strong>
-            <p>This heatmap shows the projected environmental impact zone of a data center. The circular pattern represents a ~5 mile radius of influence, with color intensity indicating severity of impact on local climate, energy grid, and water resources.</p>
-        </div>
-    </div>
+                <div class="legend-container">
+                    <div class="legend">
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: rgba(178,24,43,1);"></span>
+                        <span>Very High Impact</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: rgba(239,138,98,1);"></span>
+                        <span>High Impact</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: rgba(253,219,199,1);"></span>
+                        <span>Medium Impact</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: rgba(209,229,240,1);"></span>
+                        <span>Low Impact</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: rgba(103,169,207,1);"></span>
+                        <span>Minimal Impact</span>
+                    </div>
+                </div>
+            </div>
 
-    <!-- Instructions Panel -->
-    <div class="forecast-instructions">
-        💡 Click on the map to place a data center and see its impact zone
+            <div class="info-section">
+                <div class="section-title">Environmental Factors</div>
+                <ul class="factor-list">
+                    <li>Local climate conditions</li>
+                    <li>Energy grid capacity</li>
+                    <li>Water resource availability</li>
+                    <li>Population density</li>
+                    <li>Ecosystem sensitivity</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <strong>Heatmap Details</strong>
+                <p>The intensity and spread of the heatmap indicate the severity and reach of environmental impacts. Red zones represent areas of highest concern, while blue zones show minimal impact.</p>
+            </div>
+            </div>
+        </div>
     </div>
 
     <!-- Application Script -->
     <script type="module" src="js/forecast.js"></script>
+    
+    <script>
+        // Resizable right panel
+        (function() {
+            const resizeHandle = document.getElementById('resize-handle');
+            const rightSidebar = document.getElementById('right-sidebar');
+            const mainContent = document.querySelector('.main-content');
+            
+            const MIN_WIDTH = 360;
+            const MAX_WIDTH = 800;
+            
+            let isResizing = false;
+            let startX = 0;
+            let startWidth = 360;
+            
+            resizeHandle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = rightSidebar.offsetWidth;
+                
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                
+                const deltaX = startX - e.clientX; // Inverted because we're dragging from right
+                const newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, startWidth + deltaX));
+                
+                rightSidebar.style.width = newWidth + 'px';
+                rightSidebar.style.flexShrink = '0';
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
-

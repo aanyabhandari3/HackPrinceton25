@@ -42,7 +42,7 @@ export class UIManager {
     }
 
     setupCustomInputs() {
-        const inputIds = ['power_mw', 'servers', 'square_feet', 'water', 'employees'];
+        const inputIds = ['power_mw', 'servers', 'square_feet', 'employees'];
         
         inputIds.forEach(id => {
             const input = document.getElementById(id);
@@ -70,7 +70,6 @@ export class UIManager {
             document.getElementById('power_mw').value = this.currentConfig.power_mw;
             document.getElementById('servers').value = this.currentConfig.servers;
             document.getElementById('square_feet').value = this.currentConfig.square_feet;
-            document.getElementById('water').value = this.currentConfig.water_gallons_per_day;
             document.getElementById('employees').value = this.currentConfig.employees;
         }
     }
@@ -81,16 +80,18 @@ export class UIManager {
             power_mw: parseFloat(document.getElementById('power_mw').value) || 1,
             servers: parseInt(document.getElementById('servers').value) || 100,
             square_feet: parseInt(document.getElementById('square_feet').value) || 5000,
-            water_gallons_per_day: parseInt(document.getElementById('water').value) || 25000,
             employees: parseInt(document.getElementById('employees').value) || 10
         };
     }
 
     updateSpecsDisplay() {
+        // Calculate water usage based on server count (180 gal/server/day for air cooling)
+        const calculatedWater = this.currentConfig.servers * 180;
+        
         document.getElementById('spec-power').textContent = this.currentConfig.power_mw;
         document.getElementById('spec-servers').textContent = this.currentConfig.servers.toLocaleString();
         document.getElementById('spec-size').textContent = this.currentConfig.square_feet.toLocaleString();
-        document.getElementById('spec-water').textContent = (this.currentConfig.water_gallons_per_day / 1000).toFixed(0);
+        document.getElementById('spec-water').textContent = (calculatedWater / 1000).toFixed(0);
     }
 
     updateLocationDisplay(location) {
@@ -105,7 +106,14 @@ export class UIManager {
     }
 
     enableAnalyzeButton() {
-        document.getElementById('analyze-btn').disabled = false;
+        const btn = document.getElementById('analyze-btn');
+        console.log('Enabling button, found:', btn);
+        if (btn) {
+            btn.disabled = false;
+            console.log('Button disabled state:', btn.disabled);
+        } else {
+            console.error('Analyze button not found!');
+        }
     }
 
     disableAnalyzeButton() {
