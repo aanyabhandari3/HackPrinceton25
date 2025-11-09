@@ -77,6 +77,12 @@ Powered by Claude (Anthropic), the app generates detailed analysis including:
 - **Axios** for API communication
 - **React Markdown** for formatted AI reports
 
+**📚 Frontend Developer Resources:**
+- [FRONTEND_GETTING_STARTED.md](./skills/FRONTEND_GETTING_STARTED.md) - Quick start guide for visualization
+- [SIMULATION_QUICK_REF.md](./skills/SIMULATION_QUICK_REF.md) - API response structure reference
+- [SIMULATION_OUTPUT_GUIDE.md](./skills/SIMULATION_OUTPUT_GUIDE.md) - Complete visualization guide
+- [VISUALIZATION_MOCKUP.md](./skills/VISUALIZATION_MOCKUP.md) - UI wireframes and chart specs
+
 ## 💧 Water Usage Calculation (Technical Detail)
 
 **Formula:** `water_gallons = cooling_power_kw × factor × temp_multiplier`

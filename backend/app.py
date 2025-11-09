@@ -16,7 +16,7 @@ from services.simulate import (
     GridImpactCalculator
 )
 
-load_dotenv('config.env')
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -397,33 +397,6 @@ def calculate_impact(datacenter_config, location_data, energy_data, climate_data
         }
     }
 
-def get_street_address(lat, lon):
-    """Get street address from lat, lon"""
-    try:
-        gmaps = googlemaps.Client(key=os.getenv('MAPS_API_KEY'))
-        reverse_geocode_result = gmaps.reverse_geocode((lat, lon))
-        
-        if not reverse_geocode_result:
-            return "Address not found"
-        
-        # Try to find the most specific address
-        # Priority: street_address > route > formatted_address of first result
-        for result in reverse_geocode_result:
-            if 'street_address' in result.get('types', []):
-                return result.get('formatted_address', 'Address not found')
-        
-        # Fallback to route (street name)
-        for result in reverse_geocode_result:
-            if 'route' in result.get('types', []):
-                return result.get('formatted_address', 'Address not found')
-        
-        # Last fallback: use first result's formatted address
-        return reverse_geocode_result[0].get('formatted_address', 'Address not found')
-    
-    except Exception as e:
-        print(f"Error getting street address: {e}")
-        return "Address not found"
-
 def generate_llm_analysis(datacenter_config, location_data, energy_data, climate_data, impact_data, lat, lon):
     """Use Claude to generate comprehensive analysis"""
     
@@ -489,7 +462,7 @@ Be specific, data-driven, and balanced (mention both concerns and benefits)."""
     try:
         message = client.messages.create(
             model="claude-sonnet-4-5-20250929",
-            max_tokens=8192,
+            max_tokens=2048,
             messages=[{
                 "role": "user",
                 "content": prompt
@@ -577,7 +550,7 @@ Be specific, data-driven, and balanced. Use the actual simulation data to suppor
     try:
         message = client.messages.create(
             model="claude-sonnet-4-5-20250929",
-            max_tokens=8192,
+            max_tokens=2048,
             messages=[{
                 "role": "user",
                 "content": prompt
@@ -672,8 +645,6 @@ def analyze_datacenter():
         
         climate_data = get_climate_data(lat, lon)
         
-        street_address = get_street_address(lat, lon)
-        
         # Calculate impacts
         impact_data = calculate_impact(datacenter_config, location_data, energy_data, climate_data)
         
@@ -694,7 +665,6 @@ def analyze_datacenter():
             'location': {
                 'latitude': lat,
                 'longitude': lon,
-                'address': street_address,
                 'name': location_data.get('location_name', 'Unknown'),
                 'population': location_data.get('population', 0),
                 'median_income': location_data.get('median_income', 0)
@@ -704,7 +674,6 @@ def analyze_datacenter():
             'energy_pricing': energy_data,
             'impact': impact_data,
             'analysis': llm_analysis,
-            'street_address': street_address
         }
         
         return jsonify(report)
@@ -830,7 +799,7 @@ Be specific, data-driven, and balanced (mention both concerns and benefits)."""
             try:
                 with client.messages.stream(
                     model="claude-sonnet-4-5-20250929",
-                    max_tokens=8192,
+                    max_tokens=2048,
                     messages=[{"role": "user", "content": prompt}]
                 ) as stream:
                     for text in stream.text_stream:
@@ -1258,7 +1227,7 @@ Be specific, data-driven, and balanced. Use the actual simulation data to suppor
             try:
                 with client.messages.stream(
                     model="claude-sonnet-4-5-20250929",
-                    max_tokens=8192,
+                    max_tokens=2048,
                     messages=[{"role": "user", "content": prompt}]
                 ) as stream:
                     for text in stream.text_stream:
