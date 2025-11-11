@@ -34,7 +34,7 @@ EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost/index.html || exit 1
+  CMD wget --quiet --tries=1 --spider http://localhost/landing.html || exit 1
 
 # Use custom entrypoint to configure backend URL
 ENTRYPOINT ["/docker-entrypoint.sh"]

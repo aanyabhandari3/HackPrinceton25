@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Center Impact Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Mono', 'Courier New', monospace;
+            background: linear-gradient(135deg, #fafbf9 0%, #f0f4ed 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            width: 800px;
+            height: 800px;
+            object-fit: contain;
+            margin-bottom: -60px;
+            filter: drop-shadow(0 8px 24px rgba(21, 53, 14, 0.12));
+        }
+
+        .begin-button {
+            display: inline-block;
+            padding: 24px 64px;
+            font-family: 'Space Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+            background: #588795;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(88, 135, 149, 0.3);
+        }
+
+        .begin-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(88, 135, 149, 0.4);
+        }
+
+        .begin-button:active {
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                width: 800px;
+                height: 800px;
+                margin-bottom: 40px;
+            }
+
+            .begin-button {
+                padding: 20px 48px;
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="logo.png" alt="Logo" class="logo">
+        <a href="index.html" class="begin-button">Begin</a>
+    </div>
+</body>
+</html>

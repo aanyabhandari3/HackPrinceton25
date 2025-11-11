@@ -16,7 +16,9 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       input: {
-        main: './index.html'
+        landing: './landing.html',
+        main: './index.html',
+        forecast: './forecast.html'
       }
     }
   }

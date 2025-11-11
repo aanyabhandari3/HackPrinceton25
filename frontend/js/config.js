@@ -54,7 +54,7 @@ const getApiBaseUrl = () => {
     }
     
     // Development: use environment variable or default to localhost
-    return import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+    return import.meta.env.VITE_API_URL;
 };
 
 export const API_CONFIG = {
